@@ -17,7 +17,7 @@ python -c "import paddle; print(f'PaddlePaddle {paddle.__version__}')"
 ## 项目结构
 
 ```
-submission_template_firedetect/
+dog/
 ├── mycode/                    # 所有自定义代码放在这里
 │   ├── configs/               # 训练配置文件
 │   │   └── ppyoloe_fire.yml   # PaddleDetection 训练配置
@@ -28,17 +28,16 @@ submission_template_firedetect/
 │   ├── tools/                 # 工具脚本
 │   └── data/                  # 数据处理相关
 ├── model/                     # 模型文件（导出后）
-├── PaddleDetection/           # 官方部署代码（训练时会自动克隆）
+├── PaddleDetection/           # 官方部署代码
 ├── predict.py                 # 推理脚本
-├── Plan.md                    # 执行计划
 └── Agent.md                   # 本文件
 ```
 
 ## 关键路径
 
-- **数据集路径**: `D:\work\Marchine Dog\A_train`
-- **代码目录**: `mycode/`
-- **模型输出**: `model/`
+- **数据集路径**: `D:\work\Marchine Dog\dog\A_train`
+- **代码目录**: `D:\work\Marchine Dog\dog\mycode`
+- **模型输出**: `D:\work\Marchine Dog\dog\model`
 
 ## 训练流程（使用 PaddleDetection 官方脚本）
 
@@ -48,7 +47,10 @@ submission_template_firedetect/
 # 激活环境
 conda activate dog
 
-# 运行训练脚本（自动安装 PaddleDetection）
+# 进入项目目录
+cd D:\work\Marchine Dog\dog
+
+# 运行训练脚本
 mycode\scripts\train.bat
 
 # 或者单独导出模型
@@ -59,6 +61,7 @@ mycode\scripts\export_model.bat
 
 ```bash
 conda activate dog
+cd D:\work\Marchine Dog\dog
 python mycode/scripts/train_paddledet.py
 ```
 
@@ -68,12 +71,8 @@ python mycode/scripts/train_paddledet.py
 # 1. 激活环境
 conda activate dog
 
-# 2. 克隆并安装 PaddleDetection
-git clone https://github.com/PaddlePaddle/PaddleDetection.git
-cd PaddleDetection
-pip install -r requirements.txt
-python setup.py install
-cd ..
+# 2. 进入项目目录
+cd D:\work\Marchine Dog\dog
 
 # 3. 复制配置文件
 copy mycode\configs\ppyoloe_fire.yml PaddleDetection\configs\custom\
@@ -104,6 +103,9 @@ copy PaddleDetection\output_inference\ppyoloe_fire\infer_cfg.yml model\
 ## 打包提交
 
 ```bash
+# 进入项目目录
+cd D:\work\Marchine Dog\dog
+
 # 检查模型文件
 dir model\
 

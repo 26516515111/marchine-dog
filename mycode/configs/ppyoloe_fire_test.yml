@@ -1,0 +1,66 @@
+# PP-YOLOE-s 火焰检测配置文件 - 测试版
+# 使用小规模数据集测试训练流程
+
+# 继承基础配置
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '../ppyoloe/_base_/optimizer_300e.yml',
+  '../ppyoloe/_base_/ppyoloe_crn.yml',
+  '../ppyoloe/_base_/ppyoloe_reader.yml',
+]
+
+# 使用 CPU
+use_gpu: false
+
+# 模型配置
+pretrain_weights: https://paddledet.bj.bcebos.com/models/ppyoloe_crn_s_300e_coco.pdparams
+
+# 类别数量（修改为 3 类）
+num_classes: 3
+
+# 训练配置 - 测试用少量 epoch
+epoch: 5
+log_iter: 5
+snapshot_epoch: 1
+weights: output/ppyoloe_fire_test/best_model
+
+# 学习率配置
+LearningRate:
+  base_lr: 0.001
+  schedulers:
+    - !CosineDecay
+      max_epochs: 5
+    - !LinearWarmup
+      start_factor: 0.0
+      epochs: 1
+
+# 数据集配置 - 测试数据集
+TrainDataset:
+  !COCODataSet
+  image_dir: D:/work/Marchine Dog/dog/A_train/coco/train
+  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_train.json
+  dataset_dir: .
+  data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
+  allow_empty: true
+
+EvalDataset:
+  !COCODataSet
+  image_dir: D:/work/Marchine Dog/dog/A_train/coco/val
+  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_val.json
+  dataset_dir: .
+
+TestDataset:
+  !ImageFolder
+  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_val.json
+
+# 评估配置
+metric: COCO
+
+# 数据读取器配置 - 小 batch size
+worker_num: 2
+TrainReader:
+  batch_size: 4
+
+EvalReader:
+  batch_size: 1
