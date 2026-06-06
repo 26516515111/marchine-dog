@@ -1,0 +1,99 @@
+# PP-YOLOE-s 火焰检测配置文件
+# 用于 PaddleDetection 官方训练脚本
+
+# 继承基础配置
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '../ppyoloe/_base_/optimizer_300e.yml',
+  '../ppyoloe/_base_/ppyoloe_crn.yml',
+  '../ppyoloe/_base_/ppyoloe_reader.yml',
+]
+
+# 模型配置
+pretrain_weights: https://paddledet.bj.bcebos.com/models/ppyoloe_crn_s_300e_coco.pdparams
+
+# 类别数量（修改为 3 类）
+num_classes: 3
+
+# 训练配置
+epoch: 100
+log_iter: 20
+snapshot_epoch: 10
+weights: output/ppyoloe_fire/best_model
+
+# 学习率配置
+LearningRate:
+  base_lr: 0.001
+  schedulers:
+    - !CosineDecay
+      max_epochs: 100
+    - !LinearWarmup
+      start_factor: 0.0
+      epochs: 5
+
+# 优化器配置
+OptimizerBuilder:
+  optimizer:
+    type: Adam
+    weight_decay: 0.0005
+  regularizer: null
+
+# 数据集配置 - 训练集
+TrainDataset:
+  !COCODataSet
+  image_dir: D:/work/Marchine Dog/A_train/coco/train
+  anno_path: D:/work/Marchine Dog/A_train/coco/annotations/instance_train.json
+  dataset_dir: .
+  data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
+  allow_empty: true
+
+# 数据集配置 - 验证集
+EvalDataset:
+  !COCODataSet
+  image_dir: D:/work/Marchine Dog/A_train/coco/val
+  anno_path: D:/work/Marchine Dog/A_train/coco/annotations/instance_val.json
+  dataset_dir: .
+
+# 数据集配置 - 测试集
+TestDataset:
+  !ImageFolder
+  anno_path: D:/work/Marchine Dog/A_train/coco/annotations/instance_val.json
+
+# 评估配置
+metric: COCO
+# classwise: true
+
+# 数据读取器配置
+worker_num: 4
+TrainReader:
+  sample_transforms:
+    - Decode: {}
+    - RandomDistort: {lower: 0.8, upper: 1.2, prob: 0.5}
+    - RandomExpand: {fill_value: [123.675, 116.28, 103.53]}
+    - RandomCrop: {}
+    - RandomFlip: {prob: 0.5}
+  batch_transforms:
+    - BatchRandomResize: {target_size: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640], random_size: True, random_interp: True}
+    - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
+    - Permute: {}
+    - PadGT: {}
+  batch_size: 8
+  shuffle: true
+  drop_last: true
+
+EvalReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: 640, keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
+    - Permute: {}
+  batch_size: 1
+
+TestReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: 640, keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
+    - Permute: {}
+  batch_size: 1

@@ -1,0 +1,214 @@
+{
+  "version": "4.0.0-beta.5",
+  "flags": {},
+  "checked": false,
+  "shapes": [
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          1070.7120000000002,
+          274.1968800000001
+        ],
+        [
+          1319.9068800000002,
+          274.1968800000001
+        ],
+        [
+          1319.9068800000002,
+          766.9296
+        ],
+        [
+          1070.7120000000002,
+          766.9296
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          94.909152,
+          496.6830360000001
+        ],
+        [
+          184.76112,
+          496.6830360000001
+        ],
+        [
+          184.76112,
+          595.3546440000001
+        ],
+        [
+          94.909152,
+          595.3546440000001
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "board",
+      "score": null,
+      "points": [
+        [
+          880.3326720000001,
+          482.39172
+        ],
+        [
+          1040.9306880000001,
+          482.39172
+        ],
+        [
+          1040.9306880000001,
+          651.82428
+        ],
+        [
+          880.3326720000001,
+          651.82428
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          466.80806400000006,
+          500.48533799999996
+        ],
+        [
+          517.084416,
+          500.48533799999996
+        ],
+        [
+          517.084416,
+          571.933062
+        ],
+        [
+          466.80806400000006,
+          571.933062
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          596.5645440000001,
+          512.935524
+        ],
+        [
+          637.8495360000001,
+          512.935524
+        ],
+        [
+          637.8495360000001,
+          573.712956
+        ],
+        [
+          596.5645440000001,
+          573.712956
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          0.08208000000000215,
+          515.70837
+        ],
+        [
+          44.052576,
+          515.70837
+        ],
+        [
+          44.052576,
+          617.82075
+        ],
+        [
+          0.08208000000000215,
+          617.82075
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "battery",
+      "score": null,
+      "points": [
+        [
+          723.5647680000001,
+          509.71890599999995
+        ],
+        [
+          756.2598720000001,
+          509.71890599999995
+        ],
+        [
+          756.2598720000001,
+          572.695974
+        ],
+        [
+          723.5647680000001,
+          572.695974
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "frame_00157.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920
+}

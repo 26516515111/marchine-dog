@@ -1,0 +1,41 @@
+{
+  "version": "4.0.0-beta.5",
+  "flags": {},
+  "checked": false,
+  "shapes": [
+    {
+      "label": "battery",
+      "score": null,
+      "points": [
+        [
+          1023.2758620689656,
+          408.96551724137936
+        ],
+        [
+          1134.4827586206898,
+          408.96551724137936
+        ],
+        [
+          1134.4827586206898,
+          680.5172413793103
+        ],
+        [
+          1023.2758620689656,
+          680.5172413793103
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "frame_00090.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "description": ""
+}

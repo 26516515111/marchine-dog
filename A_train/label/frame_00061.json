@@ -1,0 +1,99 @@
+{
+  "version": "4.0.0-beta.5",
+  "flags": {},
+  "checked": false,
+  "shapes": [
+    {
+      "label": "board",
+      "score": null,
+      "points": [
+        [
+          1640.118336,
+          476.5095
+        ],
+        [
+          1807.998144,
+          476.5095
+        ],
+        [
+          1807.998144,
+          678.1293000000001
+        ],
+        [
+          1640.118336,
+          678.1293000000001
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          1241.9099519999997,
+          485.811486
+        ],
+        [
+          1309.2631679999997,
+          485.811486
+        ],
+        [
+          1309.2631679999997,
+          582.984594
+        ],
+        [
+          1241.9099519999997,
+          582.984594
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "battery",
+      "score": null,
+      "points": [
+        [
+          825.8620689655173,
+          490.86206896551727
+        ],
+        [
+          869.8275862068966,
+          490.86206896551727
+        ],
+        [
+          869.8275862068966,
+          581.3793103448277
+        ],
+        [
+          825.8620689655173,
+          581.3793103448277
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "frame_00061.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "description": ""
+}

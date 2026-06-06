@@ -1,0 +1,99 @@
+{
+  "version": "4.0.0-beta.5",
+  "flags": {},
+  "checked": false,
+  "shapes": [
+    {
+      "label": "fire",
+      "score": null,
+      "points": [
+        [
+          0.23116799999999937,
+          490.03758
+        ],
+        [
+          62.58931199999999,
+          490.03758
+        ],
+        [
+          62.58931199999999,
+          604.62234
+        ],
+        [
+          0.23116799999999937,
+          604.62234
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "battery",
+      "score": null,
+      "points": [
+        [
+          286.152768,
+          489.0262139999999
+        ],
+        [
+          343.73779199999996,
+          489.0262139999999
+        ],
+        [
+          343.73779199999996,
+          588.5913059999999
+        ],
+        [
+          286.152768,
+          588.5913059999999
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "battery",
+      "score": null,
+      "points": [
+        [
+          653.448275862069,
+          452.93103448275866
+        ],
+        [
+          726.7241379310345,
+          452.93103448275866
+        ],
+        [
+          726.7241379310345,
+          630.5172413793103
+        ],
+        [
+          653.448275862069,
+          630.5172413793103
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "frame_00188.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "description": ""
+}

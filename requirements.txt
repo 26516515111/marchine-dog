@@ -1,0 +1,34 @@
+# 火焰检测目标检测项目依赖
+# 使用方法: pip install -r requirements.txt
+
+# PaddlePaddle 深度学习框架
+paddlepaddle-gpu>=3.0.0
+
+# PaddleDetection 目标检测套件
+# 需要从源码安装: pip install -r PaddleDetection/requirements.txt && python PaddleDetection/setup.py install
+
+# 基础依赖
+numpy>=1.21.0
+opencv-python>=4.5.0
+Pillow>=9.0.0
+PyYAML>=6.0
+
+# 数据处理
+pycocotools>=2.0.6
+scikit-learn>=1.0.0
+
+# 可视化和日志
+visualdl>=2.2.0
+tqdm>=4.60.0
+
+# 数据增强
+imgaug>=0.4.0
+
+# 工具
+terminaltables>=3.1.0
+typeguard>=2.13.0
+
+# 可选: 性能优化
+# paddle2onnx        # ONNX 导出
+# onnxruntime-gpu    # ONNX 推理
+# tensorrt           # TensorRT 加速
