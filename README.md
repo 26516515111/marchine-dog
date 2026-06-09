@@ -10,7 +10,7 @@
 - cuDNN 8.x+
 - Anaconda 或 Miniconda
 
-## 从零开始安装
+## 安装环境
 
 ### 1. 创建 Conda 环境
 
@@ -78,19 +78,20 @@ dog/
 │   ├── model.pdiparams
 │   └── infer_cfg.yml
 ├── mycode/                           # 自定义代码
-│   ├── configs/                      # 训练配置
-│   │   └── ppyoloe_fire.yml
-│   ├── scripts/                      # 训练/导出脚本
-│   │   ├── train.bat
-│   │   └── export_model.bat
-│   └── tools/                        # 工具脚本
-│       ├── convert_labelme_to_coco.py
-│       ├── x2coco_custom.py
-│       └── run_x2coco.py
+│   ├── predict.py                    # 推理脚本
+│   ├── calculate_f1.py               # F1 评估脚本
+│   ├── find_best_thresholds.py       # 阈值优化脚本
+│   ├── test_fps.py                   # FPS 测试脚本
+│   ├── hard_negative_mining.py       # Hard Negative 挖掘脚本
+│   ├── analyze_fp.py                 # FP 分析脚本
+│   ├── analyze_fp_features.py        # FP 特征分析脚本
+│   ├── analyze_fp_stats.py           # FP 统计分析脚本
+│   ├── add_hard_negative.py          # 添加 Hard Negative 脚本
+│   └── check_conf.py                 # 检查 conf 分布脚本
 ├── PaddleDetection/                  # PaddleDetection 框架
-├── predict.py                        # 推理脚本
-├── calculate_f1.py                   # F1 评估脚本
-└── README.md                         # 本文件
+├── ppyolo/                           # 预训练权重
+├── README.md                         # 本文件
+└── requirements.txt                  # 依赖列表
 ```
 
 ## 类别说明
@@ -101,41 +102,23 @@ dog/
 | 2 | board | 指示牌 |
 | 3 | fire | 火焰 |
 
-## 使用方法
+## 训练验证指令
 
-### 1. 数据准备
-
-将 LabelMe 标注转换为 COCO 格式：
-```bash
-cd mycode/tools
-python run_x2coco.py
-```
-
-### 2. 训练模型
+### 1. 训练模型
 
 ```bash
 cd PaddleDetection
-python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval --use_vdl=False
+python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval
 ```
 
-或使用批处理脚本：
-```bash
-mycode/scripts/train.bat
-```
-
-### 3. 导出模型
+### 2. 导出模型
 
 ```bash
 cd PaddleDetection
 python tools/export_model.py -c configs/custom/ppyoloe_fire.yml --output_dir=./output_inference -o weights=output/ppyoloe_fire/best_model.pdparams
 ```
 
-或使用批处理脚本：
-```bash
-mycode/scripts/export_model.bat
-```
-
-### 4. 推理预测
+### 3. 推理预测
 
 ```bash
 python predict.py <data_txt> <result_json>
@@ -143,13 +126,19 @@ python predict.py <data_txt> <result_json>
 
 示例：
 ```bash
-python predict.py all_val_images.txt val_result.json
+python predict.py val.txt val_result.json
 ```
 
-### 5. 评估 F1 值
+### 4. 评估 F1 值
 
 ```bash
-python calculate_f1.py
+python calculate_f1.py val_result.json val_ground_truth.json
+```
+
+### 5. 测试 FPS
+
+```bash
+python test_fps.py
 ```
 
 ## 训练配置
@@ -187,7 +176,7 @@ python calculate_f1.py
 |------|------|----------|
 | battery | 1.5 | 13.5% |
 | board | 2.0 | 9.9% |
-| fire | 0.5 | 76.6% |
+| fire | 1.2 | 76.6% |
 
 ## 常见问题
 
@@ -234,6 +223,7 @@ TrainReader:
 
 | 指标 | 值 |
 |------|-----|
+| F1 分数 | 0.80614 |
 | 推理速度 | ≥ 20 FPS |
 | 模型大小 | ≤ 200MB |
 
