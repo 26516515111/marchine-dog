@@ -1,11 +1,13 @@
 {
-  "version": "4.0.0-beta.5",
+  "version": "6.3.1",
   "flags": {},
-  "checked": false,
   "shapes": [
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           1421.881685256958,
@@ -13,28 +15,21 @@
         ],
         [
           1918.8636302947998,
-          0.0
-        ],
-        [
-          1918.8636302947998,
-          1080.0
-        ],
-        [
-          1421.881685256958,
           1080.0
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     },
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           380.3443229198456,
@@ -42,28 +37,21 @@
         ],
         [
           448.4764015674591,
-          503.27447801828384
-        ],
-        [
-          448.4764015674591,
-          588.8881596922874
-        ],
-        [
-          380.3443229198456,
           588.8881596922874
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     },
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           212.33794927597046,
@@ -71,28 +59,21 @@
         ],
         [
           319.8634171485901,
-          483.05731147527695
-        ],
-        [
-          319.8634171485901,
-          613.0761113762856
-        ],
-        [
-          212.33794927597046,
           613.0761113762856
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     },
     {
+      "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
       "label": "board",
-      "score": null,
       "points": [
         [
           1053.1590485572815,
@@ -100,115 +81,103 @@
         ],
         [
           1256.593987941742,
-          473.17021161317825
-        ],
-        [
-          1256.593987941742,
-          674.2368337512016
-        ],
-        [
-          1053.1590485572815,
           674.2368337512016
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
+      "mask": null
+    },
+    {
+      "score": null,
+      "difficult": false,
       "attributes": {},
-      "kie_linking": []
+      "kie_linking": [],
+      "label": "battery",
+      "points": [
+        [
+          906.498436331749,
+          509.3414054811001
+        ],
+        [
+          939.2497783899307,
+          573.9046682417393
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          785.6231796741486,
+          516.0759977996349
+        ],
+        [
+          824.886120557785,
+          572.4630828201771
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          672.0870172977448,
+          501.3454017788172
+        ],
+        [
+          715.5096852779388,
+          567.895421013236
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
     },
     {
       "label": "battery",
-      "score": null,
       "points": [
         [
-          906.498436331749,
-          509.3414054811001
+          1197.5,
+          504.2857142857142
         ],
         [
-          939.2497783899307,
-          509.3414054811001
-        ],
-        [
-          939.2497783899307,
-          573.9046682417393
-        ],
-        [
-          906.498436331749,
-          573.9046682417393
+          1283.2142857142856,
+          604.2857142857142
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
-    },
-    {
-      "label": "fire",
-      "score": null,
-      "points": [
-        [
-          785.6231796741486,
-          516.0759977996349
-        ],
-        [
-          824.886120557785,
-          516.0759977996349
-        ],
-        [
-          824.886120557785,
-          572.4630828201771
-        ],
-        [
-          785.6231796741486,
-          572.4630828201771
-        ]
-      ],
-      "group_id": null,
-      "description": "",
-      "difficult": false,
-      "shape_type": "rectangle",
-      "flags": {},
-      "attributes": {},
-      "kie_linking": []
-    },
-    {
-      "label": "fire",
-      "score": null,
-      "points": [
-        [
-          672.0870172977448,
-          501.3454017788172
-        ],
-        [
-          715.5096852779388,
-          501.3454017788172
-        ],
-        [
-          715.5096852779388,
-          567.895421013236
-        ],
-        [
-          672.0870172977448,
-          567.895421013236
-        ]
-      ],
-      "group_id": null,
-      "description": "",
-      "difficult": false,
-      "shape_type": "rectangle",
-      "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     }
   ],
-  "imagePath": "frame_01320.jpg",
+  "imagePath": "..\\Image\\frame_01320.jpg",
   "imageData": null,
   "imageHeight": 1080,
-  "imageWidth": 1920
+  "imageWidth": 1920,
+  "checked": false
 }

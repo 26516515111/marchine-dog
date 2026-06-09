@@ -1,11 +1,13 @@
 {
-  "version": "4.0.0-beta.5",
+  "version": "6.3.1",
   "flags": {},
-  "checked": false,
   "shapes": [
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           485.1460075378418,
@@ -13,57 +15,59 @@
         ],
         [
           539.6391105651855,
-          512.8704026341438
-        ],
-        [
-          539.6391105651855,
-          576.3303038477898
-        ],
-        [
-          485.1460075378418,
           576.3303038477898
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
+      "mask": null
+    },
+    {
+      "score": null,
+      "difficult": false,
       "attributes": {},
-      "kie_linking": []
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          364.4188392162323,
+          504.43290062248707
+        ],
+        [
+          423.7879478931427,
+          569.7160428017378
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
     },
     {
       "label": "fire",
-      "score": null,
       "points": [
         [
-          364.4188392162323,
-          504.43290062248707
+          20.71428571428575,
+          498.92857142857144
         ],
         [
-          423.7879478931427,
-          504.43290062248707
-        ],
-        [
-          423.7879478931427,
-          569.7160428017378
-        ],
-        [
-          364.4188392162323,
-          569.7160428017378
+          111.7857142857143,
+          593.5714285714286
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     }
   ],
-  "imagePath": "frame_01421.jpg",
+  "imagePath": "..\\Image\\frame_01421.jpg",
   "imageData": null,
   "imageHeight": 1080,
-  "imageWidth": 1920
+  "imageWidth": 1920,
+  "checked": false
 }

@@ -13,14 +13,6 @@
         ],
         [
           634.65696,
-          274.15367999999995
-        ],
-        [
-          634.65696,
-          893.67408
-        ],
-        [
-          154.20576000000003,
           893.67408
         ]
       ],
@@ -33,7 +25,7 @@
       "kie_linking": []
     }
   ],
-  "imagePath": "frame_00268.jpg",
+  "imagePath": "../Image/frame_00268.jpg",
   "imageData": null,
   "imageHeight": 1080,
   "imageWidth": 1920

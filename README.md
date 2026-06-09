@@ -1,142 +1,242 @@
-# 火焰检测目标检测项目
+# 火焰检测项目
 
-## 项目概述
+基于 PaddleDetection 的 PP-YOLOE-s 模型进行火焰/电池/指示牌目标检测。
 
-基于 PaddlePaddle 框架的目标检测项目，使用 PP-YOLOE-s 模型检测 3 类目标：
-- battery（电池）
-- board（指示牌）
-- fire（火焰）
+## 环境要求
+
+- Windows 10/11
+- NVIDIA GPU（支持 CUDA）
+- CUDA 12.x
+- cuDNN 8.x+
+- Anaconda 或 Miniconda
+
+## 从零开始安装
+
+### 1. 创建 Conda 环境
+
+```bash
+conda create -n dog python=3.10 -y
+conda activate dog
+```
+
+### 2. 安装 PaddlePaddle GPU 版本
+
+```bash
+# 安装 PaddlePaddle GPU 版本（CUDA 12.3）
+pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu123/
+```
+
+验证安装：
+```bash
+python -c "import paddle; print('CUDA:', paddle.is_compiled_with_cuda()); paddle.utils.run_check()"
+```
+
+应输出：
+```
+CUDA: True
+PaddlePaddle works well on 1 GPU.
+```
+
+### 3. 克隆并安装 PaddleDetection
+
+```bash
+cd D:\work\Marchine Dog\dog
+git clone https://github.com/PaddlePaddle/PaddleDetection.git
+cd PaddleDetection
+pip install -r requirements.txt
+python setup.py install
+```
+
+### 4. 安装其他依赖
+
+```bash
+pip install opencv-python<=4.6.0 pyyaml pillow packaging>=21.0
+pip install numpy<2.0 visualdl>=2.2.0 pycocotools==2.0.8 imgaug>=0.4.0
+```
+
+### 5. 验证环境
+
+```bash
+python -c "from ppdet.data.transform.operators import MotionBlur, GaussianNoise; print('Enhancement operators loaded successfully!')"
+```
 
 ## 项目结构
 
 ```
-submission_template_firedetect/
-├── predict.py                    # 推理脚本
-├── requirements.txt              # 项目依赖
-├── model/                        # 模型文件目录
-│   ├── infer_cfg.yml            # 推理配置
-│   ├── model.pdmodel            # 模型结构
-│   └── model.pdiparams          # 模型权重
-├── mycode/                       # 自定义代码
-│   ├── configs/
-│   │   └── ppyoloe_fire.yml     # 训练配置
-│   ├── scripts/
-│   │   ├── train.bat            # Windows 训练脚本
-│   │   └── export_model.bat     # Windows 导出脚本
-│   ├── tools/
-│   │   └── convert_labelme_to_coco.py
-│   └── data/
-│       ├── annotations_train.json
-│       └── annotations_val.json
-├── PaddleDetection/              # PaddleDetection 官方代码
-├── Plan.md                       # 执行计划
-├── Agent.md                      # 操作规范
-└── 提交说明.md                    # 比赛提交说明
+dog/
+├── A_train/                          # 训练数据
+│   ├── Image/                        # 原始图片（405张）
+│   ├── label/                        # LabelMe 格式标注
+│   └── coco/                         # COCO 格式数据
+│       ├── train/                    # 训练集图片（324张）
+│       ├── val/                      # 验证集图片（81张）
+│       └── annotations/              # COCO 标注文件
+│           ├── instance_train.json
+│           └── instance_val.json
+├── model/                            # 导出的推理模型
+│   ├── model.pdmodel
+│   ├── model.pdiparams
+│   └── infer_cfg.yml
+├── mycode/                           # 自定义代码
+│   ├── configs/                      # 训练配置
+│   │   └── ppyoloe_fire.yml
+│   ├── scripts/                      # 训练/导出脚本
+│   │   ├── train.bat
+│   │   └── export_model.bat
+│   └── tools/                        # 工具脚本
+│       ├── convert_labelme_to_coco.py
+│       ├── x2coco_custom.py
+│       └── run_x2coco.py
+├── PaddleDetection/                  # PaddleDetection 框架
+├── predict.py                        # 推理脚本
+├── calculate_f1.py                   # F1 评估脚本
+└── README.md                         # 本文件
 ```
 
-## 环境配置
+## 类别说明
 
-### 1. 创建 conda 环境
+| 类别 ID | 类别名称 | 描述 |
+|---------|----------|------|
+| 1 | battery | 电池 |
+| 2 | board | 指示牌 |
+| 3 | fire | 火焰 |
 
+## 使用方法
+
+### 1. 数据准备
+
+将 LabelMe 标注转换为 COCO 格式：
 ```bash
-conda create -n dog python=3.10
-conda activate dog
+cd mycode/tools
+python run_x2coco.py
 ```
 
-### 2. 安装依赖
+### 2. 训练模型
 
 ```bash
-# 安装基础依赖
-pip install -r requirements.txt
-
-# 安装 PaddleDetection
 cd PaddleDetection
-pip install -r requirements.txt
-python setup.py install
-cd ..
+python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval --use_vdl=False
 ```
 
-### 3. 验证安装
-
+或使用批处理脚本：
 ```bash
-python -c "import paddle; print('PaddlePaddle:', paddle.__version__)"
-python -c "import ppdet; print('PaddleDetection OK')"
+mycode/scripts/train.bat
 ```
 
-## 训练流程
-
-### 方法一：使用批处理脚本（推荐）
+### 3. 导出模型
 
 ```bash
-conda activate dog
-mycode\scripts\train.bat
-```
-
-### 方法二：手动执行
-
-```bash
-conda activate dog
 cd PaddleDetection
-
-# 训练
-python -m paddle.distributed.launch --gpus 0 tools/train.py \
-    -c configs/custom/ppyoloe_fire.yml \
-    --eval \
-    --use_vdl=True \
-    --output_dir=output/ppyoloe_fire
-
-# 评估
-python tools/eval.py \
-    -c configs/custom/ppyoloe_fire.yml \
-    -o weights=output/ppyoloe_fire/best_model.pdparams
-
-# 导出
-python tools/export_model.py \
-    -c configs/custom/ppyoloe_fire.yml \
-    --output_dir=./output_inference \
-    -o weights=output/ppyoloe_fire/best_model.pdparams
+python tools/export_model.py -c configs/custom/ppyoloe_fire.yml --output_dir=./output_inference -o weights=output/ppyoloe_fire/best_model.pdparams
 ```
 
-## 提交打包
+或使用批处理脚本：
+```bash
+mycode/scripts/export_model.bat
+```
+
+### 4. 推理预测
 
 ```bash
-# 复制模型文件到 model/ 目录
-copy PaddleDetection\output_inference\ppyoloe_fire\model.pdmodel model\
-copy PaddleDetection\output_inference\ppyoloe_fire\model.pdiparams model\
-copy PaddleDetection\output_inference\ppyoloe_fire\infer_cfg.yml model\
-
-# 打包
-zip -r submission.zip predict.py model/ PaddleDetection/deploy/
+python predict.py <data_txt> <result_json>
 ```
 
-## 模型性能
+示例：
+```bash
+python predict.py all_val_images.txt val_result.json
+```
 
-| 指标 | 预期值 |
-|------|--------|
-| 模型大小 | ~28MB |
-| FPS | 30-50 |
-| F1 Score | 0.6-0.8 |
-| 训练时间 | 2-4 小时 |
+### 5. 评估 F1 值
+
+```bash
+python calculate_f1.py
+```
+
+## 训练配置
+
+当前配置（`mycode/configs/ppyoloe_fire.yml`）：
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| 模型 | PP-YOLOE-s | 预训练权重：COCO |
+| Epoch | 200 | 训练轮数 |
+| Batch Size | 8 | 批次大小 |
+| 学习率 | 0.0005 | 初始学习率 |
+| 优化器 | Momentum | 动量=0.9 |
+| 权重衰减 | 0.0005 | L2 正则化 |
+
+### 数据增强
+
+| 增强操作 | 概率 | 说明 |
+|----------|------|------|
+| Mosaic | 0.3 | 四图拼接 |
+| Mixup | 0.2 | 两图混合 |
+| RandomDistort | - | 颜色抖动（亮度/对比度/饱和度/色调） |
+| MotionBlur | 0.3 | 运动模糊 |
+| GaussianNoise | 0.2 | 高斯噪声 |
+| RandomExpand | - | 随机扩展 |
+| RandomCrop | - | 随机裁剪 |
+| RandomFlip | - | 随机水平翻转 |
+| BatchRandomResize | - | 多尺度训练（640/768/896） |
+
+### 类别权重
+
+针对类别不平衡问题，设置了不同的损失权重：
+
+| 类别 | 权重 | 样本占比 |
+|------|------|----------|
+| battery | 1.5 | 13.5% |
+| board | 2.0 | 9.9% |
+| fire | 0.5 | 76.6% |
 
 ## 常见问题
 
-### 1. 显存不足
+### 1. CUDA 不可用
 
-修改 `mycode/configs/ppyoloe_fire.yml` 中的 `batch_size`：
+检查 CUDA 环境变量：
+```bash
+echo %CUDA_HOME%
+echo %PATH%
+```
+
+如未设置，执行：
+```bash
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3
+set PATH=%CUDA_HOME%\bin;%PATH%
+```
+
+### 2. PaddleDetection 导入错误
+
+确保已安装 PaddleDetection：
+```bash
+cd PaddleDetection
+python setup.py install
+```
+
+### 3. 增强算子未找到
+
+确保使用的是 dog 环境的 Python：
+```bash
+where.exe python
+# 应显示 D:\Anaconda\envs\dog\python.exe
+```
+
+### 4. 内存不足
+
+减小 batch_size：
 ```yaml
+# 修改 ppyoloe_fire.yml
 TrainReader:
-  batch_size: 4  # 从 8 减小到 4
+  batch_size: 4  # 原为 8
 ```
 
-### 2. FPS 不满足要求
+## 性能指标
 
-- 使用 TensorRT 加速
-- 减小输入尺寸
-- 使用更轻量的模型
+| 指标 | 值 |
+|------|-----|
+| 推理速度 | ≥ 20 FPS |
+| 模型大小 | ≤ 200MB |
 
-### 3. 类别编号问题
+## 许可证
 
-比赛要求 1-indexed，predict.py 已处理：
-```python
-"type": int(id_results[idx]) + 1
-```
+本项目基于 PaddleDetection 开发，遵循 Apache 2.0 许可证。

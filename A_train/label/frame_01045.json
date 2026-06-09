@@ -1,11 +1,13 @@
 {
-  "version": "4.0.0-beta.5",
+  "version": "6.3.1",
   "flags": {},
-  "checked": false,
   "shapes": [
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           124.64150547981262,
@@ -13,57 +15,59 @@
         ],
         [
           204.3923556804657,
-          509.3912945687771
-        ],
-        [
-          204.3923556804657,
-          583.7097729742527
-        ],
-        [
-          124.64150547981262,
           583.7097729742527
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
+      "mask": null
+    },
+    {
+      "score": null,
+      "difficult": false,
       "attributes": {},
-      "kie_linking": []
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          409.3585503101349,
+          558.0256395041943
+        ],
+        [
+          449.3621528148651,
+          609.8373480141163
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
     },
     {
       "label": "fire",
-      "score": null,
       "points": [
         [
-          409.3585503101349,
-          558.0256395041943
+          42.14285714285718,
+          581.0714285714286
         ],
         [
-          449.3621528148651,
-          558.0256395041943
-        ],
-        [
-          449.3621528148651,
-          609.8373480141163
-        ],
-        [
-          409.3585503101349,
-          609.8373480141163
+          0.0,
+          500.864055299539
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
     }
   ],
-  "imagePath": "frame_01045.jpg",
+  "imagePath": "..\\Image\\frame_01045.jpg",
   "imageData": null,
   "imageHeight": 1080,
-  "imageWidth": 1920
+  "imageWidth": 1920,
+  "checked": false
 }

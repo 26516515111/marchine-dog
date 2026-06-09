@@ -31,6 +31,14 @@ label_to_num = {}
 categories_list = []
 labels_list = []
 
+# 固定类别映射（竞赛要求）
+FIXED_CATEGORIES = [
+    {"supercategory": "component", "id": 1, "name": "battery"},
+    {"supercategory": "component", "id": 2, "name": "board"},
+    {"supercategory": "component", "id": 3, "name": "fire"}
+]
+FIXED_LABEL_TO_NUM = {"battery": 1, "board": 2, "fire": 3}
+
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -131,6 +139,13 @@ def deal_json(ds_type, img_path, json_path):
     annotations_list = []
     image_num = -1
     object_num = -1
+    
+    # 使用固定类别映射
+    global label_to_num, categories_list, labels_list
+    label_to_num = FIXED_LABEL_TO_NUM.copy()
+    categories_list = FIXED_CATEGORIES.copy()
+    labels_list = list(FIXED_LABEL_TO_NUM.keys())
+    
     for img_file in os.listdir(img_path):
         img_label = os.path.splitext(img_file)[0]
         if img_file.split('.')[
@@ -149,10 +164,9 @@ def deal_json(ds_type, img_path, json_path):
                 for shapes in data['shapes']:
                     object_num = object_num + 1
                     label = shapes['label']
-                    if label not in labels_list:
-                        categories_list.append(categories(label, labels_list))
-                        labels_list.append(label)
-                        label_to_num[label] = len(labels_list)
+                    if label not in label_to_num:
+                        print(f"警告: 未知类别 '{label}'，跳过")
+                        continue
                     p_type = shapes['shape_type']
                     if p_type == 'polygon':
                         points = shapes['points']
@@ -183,10 +197,9 @@ def deal_json(ds_type, img_path, json_path):
                 for shapes in data['objects']:
                     object_num = object_num + 1
                     label = shapes['label']
-                    if label not in labels_list:
-                        categories_list.append(categories(label, labels_list))
-                        labels_list.append(label)
-                        label_to_num[label] = len(labels_list)
+                    if label not in label_to_num:
+                        print(f"警告: 未知类别 '{label}'，跳过")
+                        continue
                     points = shapes['polygon']
                     annotations_list.append(
                         annotations_polygon(data['imgHeight'], data[

@@ -8,14 +8,14 @@ import glob
 from PIL import Image
 
 
-# 类别映射
+# 类别映射 (竞赛要求 1-indexed)
 CATEGORIES = [
-    {"id": 0, "name": "battery"},
-    {"id": 1, "name": "board"},
-    {"id": 2, "name": "fire"}
+    {"id": 1, "name": "battery"},
+    {"id": 2, "name": "board"},
+    {"id": 3, "name": "fire"}
 ]
 
-LABEL_TO_ID = {"battery": 0, "board": 1, "fire": 2}
+LABEL_TO_ID = {"battery": 1, "board": 2, "fire": 3}
 
 
 def convert_labelme_to_coco(image_dir, label_dir, output_path, train_ratio=0.8):
@@ -126,7 +126,7 @@ def convert_labelme_to_coco(image_dir, label_dir, output_path, train_ratio=0.8):
     print(f"  输出文件: {output_path}")
     
     # 统计各类别数量
-    cat_counts = {0: 0, 1: 0, 2: 0}
+    cat_counts = {1: 0, 2: 0, 3: 0}
     for ann in coco_data["annotations"]:
         cat_counts[ann["category_id"]] += 1
     
@@ -173,9 +173,9 @@ def split_dataset(coco_data, train_ratio=0.8):
 
 if __name__ == "__main__":
     # 路径配置
-    IMAGE_DIR = r"D:\work\Marchine Dog\submission_template_firedetect\A_train\Image"
-    LABEL_DIR = r"D:\work\Marchine Dog\submission_template_firedetect\A_train\label"
-    OUTPUT_DIR = r"D:\work\Marchine Dog\submission_template_firedetect\mycode\data"
+    IMAGE_DIR = r"D:\work\Marchine Dog\dog\A_train\Image"
+    LABEL_DIR = r"D:\work\Marchine Dog\dog\A_train\label"
+    OUTPUT_DIR = r"D:\work\Marchine Dog\dog\mycode\data"
     
     # 创建输出目录
     os.makedirs(OUTPUT_DIR, exist_ok=True)

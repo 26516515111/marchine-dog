@@ -1,11 +1,13 @@
 {
-  "version": "4.0.0-beta.5",
+  "version": "6.3.1",
   "flags": {},
-  "checked": false,
   "shapes": [
     {
-      "label": "fire",
       "score": null,
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
       "points": [
         [
           1638.5675132274628,
@@ -13,28 +15,73 @@
         ],
         [
           1681.9309151172638,
-          509.0808476507664
-        ],
-        [
-          1681.9309151172638,
-          568.6587582528591
-        ],
-        [
-          1638.5675132274628,
           568.6587582528591
         ]
       ],
       "group_id": null,
       "description": "",
-      "difficult": false,
       "shape_type": "rectangle",
       "flags": {},
-      "attributes": {},
-      "kie_linking": []
+      "mask": null
+    },
+    {
+      "label": "fire",
+      "points": [
+        [
+          1217.142857142857,
+          504.2857142857142
+        ],
+        [
+          1285.0,
+          591.7857142857142
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "board",
+      "points": [
+        [
+          1363.5714285714284,
+          488.21428571428567
+        ],
+        [
+          1531.4285714285713,
+          620.3571428571429
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "fire",
+      "points": [
+        [
+          1833.2142857142856,
+          498.92857142857144
+        ],
+        [
+          1915.3571428571427,
+          615.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "rectangle",
+      "flags": {},
+      "mask": null
     }
   ],
-  "imagePath": "frame_01072.jpg",
+  "imagePath": "..\\Image\\frame_01072.jpg",
   "imageData": null,
   "imageHeight": 1080,
-  "imageWidth": 1920
+  "imageWidth": 1920,
+  "checked": false
 }
