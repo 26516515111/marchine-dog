@@ -14,9 +14,9 @@ PADDLEDETECTION_DIR = os.path.join(os.path.dirname(__file__), '..', 'PaddleDetec
 CONFIG_FILE = 'configs/custom/ppyoloe_fire.yml'
 GIT_REPO_DIR = os.path.join(os.path.dirname(__file__), '..')
 
-# GitHub 配置 - 在这里添加你的 Personal Access Token
-GITHUB_TOKEN = ''  # 在这里填写你的 GitHub Token，例如：''
-GITHUB_REPO = 'https://github.com/26516515111/marchine-dog.git'  # 在这里填写你的仓库地址
+# GitHub 配置 - 从环境变量读取 Token
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')  # 设置环境变量 GITHUB_TOKEN=
+GITHUB_REPO = 'https://github.com/26516515111/marchine-dog.git'
 
 def run_command(cmd, cwd=None):
     """运行命令并打印输出"""
