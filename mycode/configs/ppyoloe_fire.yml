@@ -21,7 +21,7 @@ num_classes: 3
 # 权重顺序：battery, board, fire（与 COCO 标注 category_id 一致）
 PPYOLOEHead:
   loss_weight:
-    class_weight: [1.5, 2.0, 0.5]  # battery=1.5, board=2.0, fire=0.5
+    class_weight: [1.5, 2.0, 1.2]  # battery=1.5, board=2.0, fire=1.2
 
 # ==================== 训练配置 ====================
 # 训练轮数：增加到 200 个 epoch 以更好地学习 minority 类别
@@ -34,7 +34,7 @@ log_iter: 20
 snapshot_epoch: 10
 
 # 模型保存路径：保存最佳模型的路径
-weights: output/best_model/model
+weights: output/ppyoloe_fire/best_model
 
 # ==================== 学习率配置 ====================
 LearningRate:
@@ -69,8 +69,8 @@ OptimizerBuilder:
 # 训练集配置
 TrainDataset:
   !COCODataSet
-  image_dir: D:/work/Marchine Dog/dog/A_train/coco/train  # 训练图片目录
-  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_train.json  # 训练标注文件
+  image_dir: D:/work/Marchine Dog/dog/A_train/Image  # 训练图片目录
+  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_train.json  # 原始标注
   dataset_dir: .
   data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']  # 数据字段
   allow_empty: true  # 允许空标注
@@ -126,10 +126,11 @@ TrainReader:
     - Permute: {}       # 通道顺序转换 (HWC -> CHW)
     - PadGT: {}         # 填充 Ground Truth
   
-  batch_size: 8        # 批量大小：增加以提高训练稳定性
+  batch_size: 4        # 批量大小：增加以提高训练稳定性
   shuffle: true        # 随机打乱数据
   drop_last: true      # 丢弃最后一个不完整的 batch
   use_shared_memory: true  # 使用共享内存加速
+  close_mosaic: 20     # 最后 20 个 epoch 关闭 Mosaic/Mixup，提升收敛
 
 # 验证数据读取器
 EvalReader:
