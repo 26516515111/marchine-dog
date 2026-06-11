@@ -16,10 +16,13 @@ TRAIN_IMAGE_DIR = os.path.join(BASE_DIR, 'A_train', 'Image')
 TRAIN_ANNOTATION = os.path.join(BASE_DIR, 'A_train', 'coco', 'annotations', 'instance_train.json')
 OUTPUT_DIR = os.path.join(BASE_DIR, 'A_train', 'hard_negative')
 
-CONF_THRESHOLD = 0.1
+CONF_THRESHOLD = 0.15
 IOU_THRESHOLD = 0.5
 CROP_PADDING = 10
-MAX_CROPS_PER_IMAGE = 5
+MAX_CROPS_PER_IMAGE = 15
+# check_iou_with_gt 的 IoU 阈值：允许与 GT 有少量重叠的 FP 作为 hard negative
+# 原值 0.0 过于严格，导致 105 个 FP 仅提取 3 个 crop
+HN_IOU_THRESHOLD = 0.3
 
 CATEGORY_MAP = {0: 'battery', 1: 'board', 2: 'fire'}
 
@@ -163,8 +166,8 @@ def main():
             fps = random.sample(fps, MAX_CROPS_PER_IMAGE)
 
         for i, fp in enumerate(fps):
-            # 检查与 GT 的 IoU，确保为 0
-            if not check_iou_with_gt(fp['bbox'], gt, iou_threshold=0.0):
+            # 检查与 GT 的 IoU，允许少量重叠（不同类别的偶然重叠）
+            if not check_iou_with_gt(fp['bbox'], gt, iou_threshold=HN_IOU_THRESHOLD):
                 continue
             
             cname = CATEGORY_MAP[fp['class_id']]
@@ -191,7 +194,9 @@ def main():
         'total_crops': total_crops,
         'fp_by_class': cls_count,
         'conf_threshold': CONF_THRESHOLD,
-        'iou_threshold': IOU_THRESHOLD
+        'iou_threshold': IOU_THRESHOLD,
+        'hn_iou_threshold': HN_IOU_THRESHOLD,
+        'max_crops_per_image': MAX_CROPS_PER_IMAGE
     }
     with open(os.path.join(OUTPUT_DIR, 'mining_stats.json'), 'w') as f:
         json.dump(stats, f, indent=2)

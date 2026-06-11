@@ -17,11 +17,14 @@ pretrain_weights: ../ppyolo/ppyoloe_crn_s_300e_coco.pdparams
 # 类别数量：检测 3 个类别（电池、电路板、火焰）
 num_classes: 3
 
-# 类别权重：针对类别不平衡问题，给少数类别更高权重
-# 权重顺序：battery, board, fire（与 COCO 标注 category_id 一致）
-PPYOLOEHead:
-  loss_weight:
-    class_weight: [1.5, 2.0, 0.5]  # battery=1.5, board=2.0, fire=0.5
+# 模型缩放因子：必须与 pretrain_weights 匹配
+# PP-YOLOE-s 使用 width_mult=0.50, depth_mult=0.33
+depth_mult: 0.33
+width_mult: 0.50
+
+# NOTE: PPYOLOEHead loss_weight 仅支持 {class, iou, dfl} 键
+# VarifocalLoss 不支持 per-class 权重
+# 类别不平衡通过数据级过采样解决
 
 # ==================== 训练配置 ====================
 # 训练轮数：增加到 200 个 epoch 以更好地学习 minority 类别

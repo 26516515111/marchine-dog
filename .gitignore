@@ -3,8 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Agent
+.workbuddy/
+.claude/
+
 # C extensions
 *.so
+CLAUDE.md
+plan.md
+Agent.md
+训练结果改进调研报告.md
 
 # Distribution / packaging
 .Python

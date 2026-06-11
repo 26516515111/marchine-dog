@@ -19,6 +19,10 @@ pretrain_weights: https://paddledet.bj.bcebos.com/models/ppyoloe_crn_s_300e_coco
 # 类别数量（修改为 3 类）
 num_classes: 3
 
+# 模型缩放因子：必须与 pretrain_weights 匹配 (PP-YOLOE-s)
+depth_mult: 0.33
+width_mult: 0.50
+
 # 训练配置 - 测试用少量 epoch
 epoch: 5
 log_iter: 5

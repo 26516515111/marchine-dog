@@ -17,11 +17,15 @@ pretrain_weights: https://paddledet.bj.bcebos.com/models/ppyoloe_crn_s_300e_coco
 # 类别数量：检测 3 个类别（电池、电路板、火焰）
 num_classes: 3
 
-# 类别权重：针对类别不平衡问题，给少数类别更高权重
-# 权重顺序：battery, board, fire（与 COCO 标注 category_id 一致）
-PPYOLOEHead:
-  loss_weight:
-    class_weight: [1.5, 2.0, 1.2]  # battery=1.5, board=2.0, fire=1.2
+# 模型缩放因子：必须与 pretrain_weights 匹配
+# PP-YOLOE-s 使用 width_mult=0.50, depth_mult=0.33
+# 参考: PaddleDetection/configs/ppyoloe/ppyoloe_crn_s_300e_coco.yml
+depth_mult: 0.33
+width_mult: 0.50
+
+# NOTE: PPYOLOEHead loss_weight 仅支持 {class, iou, dfl} 键
+# VarifocalLoss 不支持 per-class 权重，class_weight 列表会被静默忽略
+# 类别不平衡通过数据级过采样解决（见 oversample_minority.py）
 
 # ==================== 训练配置 ====================
 # 训练轮数：增加到 200 个 epoch 以更好地学习 minority 类别
@@ -39,7 +43,7 @@ weights: output/ppyoloe_fire/best_model
 # ==================== 学习率配置 ====================
 LearningRate:
   # 基础学习率：提高以加速收敛
-  base_lr: 0.0005
+  base_lr: 0.01
   
   schedulers:
     # 余弦退火调度器：学习率按余弦函数衰减
@@ -66,10 +70,10 @@ OptimizerBuilder:
     factor: 0.0005
 
 # ==================== 数据集配置 ====================
-# 训练集配置
+# 训练集配置（使用原始数据 + 在线增强）
 TrainDataset:
   !COCODataSet
-  image_dir: D:/work/Marchine Dog/dog/A_train/Image  # 训练图片目录
+  image_dir: D:/work/Marchine Dog/dog/A_train/coco/train  # 训练图片目录（324张）
   anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_train.json  # 原始标注
   dataset_dir: .
   data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']  # 数据字段
@@ -98,7 +102,8 @@ worker_num: 4
 TrainReader:
   sample_transforms:  # 单样本数据增强
     - Decode: {}                    # 解码图片
-    - Mosaic: {prob: 0.3, enable_mixup: true, mixup_prob: 0.2}  # Mosaic + Mixup 增强
+    - Mosaic: {prob: 0.5, enable_mixup: true, mixup_prob: 0.3}  # Mosaic + Mixup 增强（提高概率）
+    - GridMask: {use_h: true, use_w: true, rotate: 1, ratio: 0.6, prob: 0.4}  # 网格遮挡增强
     - RandomDistort: {              # 随机颜色抖动（含 BrightnessContrast + HSV）
         brightness: [0.5, 1.5, 0.5],
         contrast: [0.5, 1.5, 0.5],
@@ -130,7 +135,7 @@ TrainReader:
   shuffle: true        # 随机打乱数据
   drop_last: true      # 丢弃最后一个不完整的 batch
   use_shared_memory: true  # 使用共享内存加速
-  close_mosaic: 20     # 最后 20 个 epoch 关闭 Mosaic/Mixup，提升收敛
+  close_mosaic: 30     # 最后 30 个 epoch 关闭 Mosaic/Mixup，提升收敛
 
 # 验证数据读取器
 EvalReader:

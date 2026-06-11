@@ -1,6 +1,6 @@
 # 火焰检测项目
 
-基于 PaddleDetection 的 PP-YOLOE-s 模型进行火焰/电池/指示牌目标检测。
+基于 PaddleDetection 的 PP-YOLOE-s / RT-DETR-R18 双模型进行火焰/电池/指示牌目标检测。
 
 ## 环境要求
 
@@ -89,8 +89,15 @@ dog/
 │   ├── add_hard_negative.py          # 添加 Hard Negative 脚本
 │   └── check_conf.py                 # 检查 conf 分布脚本
 ├── PaddleDetection/                  # PaddleDetection 框架
+├── RT-DETR/                          # RT-DETR 方案
+│   ├── configs/rtdetr_r18vd_fire.yml #   RT-DETR-R18 训练配置
+│   ├── README.md                     #   方案文档
+│   └── train.bat                     #   训练脚本
 ├── ppyolo/                           # 预训练权重
 ├── README.md                         # 本文件
+├── CLAUDE.md                         # 开发规范与陷阱记录
+├── Agent.md                          # 配置变更历史
+├── 训练结果改进调研报告.md            # 优化方案调研
 └── requirements.txt                  # 依赖列表
 ```
 
@@ -107,7 +114,14 @@ dog/
 ### 1. 训练模型
 
 ```bash
+# 方案 A1：PP-YOLOE-s 调参优化版（推荐首选）
 cd PaddleDetection
+python tools/train.py -c configs/custom/ppyoloe_fire_a1.yml --eval
+
+# 方案 B1：RT-DETR-R18（并行试验）
+python tools/train.py -c configs/custom/rtdetr_r18vd_fire.yml --eval
+
+# 原始版（对照基线）
 python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval
 ```
 
@@ -115,7 +129,7 @@ python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval
 
 ```bash
 cd PaddleDetection
-python tools/export_model.py -c configs/custom/ppyoloe_fire.yml --output_dir=./output_inference -o weights=output/ppyoloe_fire/best_model.pdparams
+python tools/export_model.py -c configs/custom/ppyoloe_fire_a1.yml --output_dir=./output_inference -o weights=output/ppyoloe_fire_a1/best_model.pdparams
 ```
 
 ### 3. 推理预测
@@ -143,23 +157,38 @@ python test_fps.py
 
 ## 训练配置
 
-当前配置（`mycode/configs/ppyoloe_fire.yml`）：
+### 方案 A1：PP-YOLOE-s 调参优化版（`mycode/configs/ppyoloe_fire_a1.yml`）
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| 模型 | PP-YOLOE-s | 预训练权重：COCO |
-| Epoch | 200 | 训练轮数 |
-| Batch Size | 8 | 批次大小 |
-| 学习率 | 0.0005 | 初始学习率 |
+| 模型 | PP-YOLOE-s | 预训练权重：COCO，depth_mult=0.33, width_mult=0.50 |
+| Epoch | 350 | 小数据集+强增强需要更多迭代 |
+| Batch Size | 4 | 受限于 RTX 4060 8GB VRAM |
+| 学习率 | 0.01 | CosineDecay + LinearWarmup(12 epochs) |
 | 优化器 | Momentum | 动量=0.9 |
 | 权重衰减 | 0.0005 | L2 正则化 |
+| close_mosaic | 55 | 最后 55 轮关闭 Mosaic/Mixup |
+| NMS threshold | 0.55 | 降低以减少漏检 |
+| Score threshold | 0.05 | 提高以减少低置信度 FP |
 
-### 数据增强
+### 方案 B1：RT-DETR-R18（`RT-DETR/configs/rtdetr_r18vd_fire.yml`）
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| 模型 | RT-DETR-R18 | Transformer 端到端检测，无需 NMS |
+| Epoch | 300 | 超长训练补偿小数据集 |
+| Batch Size | 4 | 受限于 8GB VRAM |
+| 学习率 | 0.0001 | PiecewiseDecay + LinearWarmup(2000 steps) |
+| 优化器 | AdamW | DETR 标配 |
+| 权重衰减 | 0.0001 | AdamW 内置 |
+| 多尺度 | 480~800 | 13 个尺度随机选择 |
+
+### PP-YOLOE-s 数据增强
 
 | 增强操作 | 概率 | 说明 |
 |----------|------|------|
-| Mosaic | 0.3 | 四图拼接 |
-| Mixup | 0.2 | 两图混合 |
+| Mosaic | 0.5 | 四图拼接 + Mixup(0.3) |
+| GridMask | 0.5 | 网格遮挡正则化 |
 | RandomDistort | - | 颜色抖动（亮度/对比度/饱和度/色调） |
 | MotionBlur | 0.3 | 运动模糊 |
 | GaussianNoise | 0.2 | 高斯噪声 |
@@ -168,15 +197,16 @@ python test_fps.py
 | RandomFlip | - | 随机水平翻转 |
 | BatchRandomResize | - | 多尺度训练（640/768/896） |
 
-### 类别权重
+### 类别分布
 
-针对类别不平衡问题，设置了不同的损失权重：
+| 类别 | 实例数 | 占比 |
+|------|--------|------|
+| battery | 151 | 15.4% |
+| board | 112 | 11.4% |
+| fire | 717 | 73.2% |
 
-| 类别 | 权重 | 样本占比 |
-|------|------|----------|
-| battery | 1.5 | 13.5% |
-| board | 2.0 | 9.9% |
-| fire | 1.2 | 76.6% |
+> **注意**：VarifocalLoss 不支持 per-class 权重，`class_weight` 配置会被静默忽略。
+> 类别不平衡通过数据级过采样解决。
 
 ## 常见问题
 
@@ -216,16 +246,31 @@ where.exe python
 ```yaml
 # 修改 ppyoloe_fire.yml
 TrainReader:
-  batch_size: 4  # 原为 8
+  batch_size: 2  # 默认为 4
 ```
+
+### 5. 配置不生效
+
+`class_weight` 列表格式在 PPYOLOEHead 中不被识别（仅支持 `{class, iou, dfl}` dict）。
+VarifocalLoss 不支持 per-class 权重，需通过数据过采样解决类别不平衡。
+详见 `Agent.md` 和 `CLAUDE.md`。
 
 ## 性能指标
 
-| 指标 | 值 |
-|------|-----|
-| F1 分数 | 0.80614 |
-| 推理速度 | ≥ 20 FPS |
-| 模型大小 | ≤ 200MB |
+| 指标 | 当前值 | 目标值 | 说明 |
+|------|--------|--------|------|
+| F1 分数 | 0.80614 | >= 0.85 | PP-YOLOE-s 当前最佳 |
+| 推理速度 | >= 20 FPS | >= 20 FPS | RTX 4060 Laptop |
+| 模型大小 | ~212MB | <= 200MB | 导出后可压缩 |
+
+### 优化路线
+
+| 方案 | 配置 | 状态 | 预期 F1 |
+|------|------|------|---------|
+| A1 PP-YOLOE-s 调参 | `ppyoloe_fire_a1.yml` | 就绪 | 0.83~0.85 |
+| B1 RT-DETR-R18 | `rtdetr_r18vd_fire.yml` | 就绪 | 0.84~0.88 |
+| A2 数据扩充 | Copy-Paste + 离线增强 | 待执行 | +0.01~0.03 |
+| A3 PP-YOLOE+ | 升级 Head 架构 | 待执行 | +0.02~0.04 |
 
 ## 许可证
 
