@@ -35,6 +35,8 @@ RT-DETR/
 
 ## 训练步骤
 
+训练配置使用相对数据路径，默认从项目根下的 `PaddleDetection/` 目录执行。项目迁移到其他电脑时，只要保持 `A_train/` 和 `PaddleDetection/` 同级，无需修改 RT-DETR 配置中的数据路径。
+
 ### 1. 配置同步
 
 ```bash
@@ -68,8 +70,8 @@ python tools/eval.py -c configs/custom/rtdetr_r18vd_fire.yml -o weights=output/r
 ## 配置要点
 
 ### 数据集
-- 训练集：324 张（D:/work/Marchine Dog/dog/A_train/coco/train）
-- 验证集：81 张（D:/work/Marchine Dog/dog/A_train/coco/val）
+- 训练集：324 张（`../A_train/coco/train`，从 `PaddleDetection/` 目录解析）
+- 验证集：81 张（`../A_train/coco/val`，从 `PaddleDetection/` 目录解析）
 - 3 个类别：battery(1), board(2), fire(3)
 
 ### 训练参数

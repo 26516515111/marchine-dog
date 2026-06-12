@@ -111,6 +111,8 @@ dog/
 
 ## 训练验证指令
 
+训练配置使用相对数据路径，默认从 `PaddleDetection/` 目录启动。移动项目到其他电脑时，只要保持 `dog/PaddleDetection` 和 `dog/A_train` 的相对位置不变，无需改配置中的数据路径。
+
 ### 1. 训练模型
 
 ```bash
@@ -164,7 +166,7 @@ python test_fps.py
 | 模型 | PP-YOLOE-s | 预训练权重：COCO，depth_mult=0.33, width_mult=0.50 |
 | Epoch | 350 | 小数据集+强增强需要更多迭代 |
 | Batch Size | 4 | 受限于 RTX 4060 8GB VRAM |
-| 学习率 | 0.01 | CosineDecay + LinearWarmup(12 epochs) |
+| 学习率 | 0.0005 | CosineDecay + LinearWarmup(5 epochs)，强增强+小 batch 下更稳定 |
 | 优化器 | Momentum | 动量=0.9 |
 | 权重衰减 | 0.0005 | L2 正则化 |
 | close_mosaic | 55 | 最后 55 轮关闭 Mosaic/Mixup |
