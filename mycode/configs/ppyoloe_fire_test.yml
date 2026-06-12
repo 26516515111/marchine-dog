@@ -42,21 +42,21 @@ LearningRate:
 # 数据集配置 - 测试数据集
 TrainDataset:
   !COCODataSet
-  image_dir: D:/work/Marchine Dog/dog/A_train/coco/train
-  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_train.json
-  dataset_dir: .
+  image_dir: train
+  anno_path: annotations/instance_train.json
+  dataset_dir: ../A_train/coco
   data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
   allow_empty: true
 
 EvalDataset:
   !COCODataSet
-  image_dir: D:/work/Marchine Dog/dog/A_train/coco/val
-  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_val.json
-  dataset_dir: .
+  image_dir: val
+  anno_path: annotations/instance_val.json
+  dataset_dir: ../A_train/coco
 
 TestDataset:
   !ImageFolder
-  anno_path: D:/work/Marchine Dog/dog/A_train/coco/annotations/instance_val.json
+  anno_path: ../A_train/coco/annotations/instance_val.json
 
 # 评估配置
 metric: COCO
