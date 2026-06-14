@@ -17,6 +17,10 @@ pretrain_weights: https://paddledet.bj.bcebos.com/models/ppyoloe_crn_s_300e_coco
 # 类别数量：检测 3 个类别（电池、电路板、火焰）
 num_classes: 3
 
+# Eval/Test 使用 keep_ratio=True + PadBatch 时，验证输入为动态 padded 尺寸。
+# 这里必须禁用固定 eval_size，避免 PPYOLOEHead 继续按 640x640 预生成 anchors。
+eval_size: ~
+
 # 模型缩放因子：必须与 pretrain_weights 匹配
 # PP-YOLOE-s 使用 width_mult=0.50, depth_mult=0.33
 # 参考: PaddleDetection/configs/ppyoloe/ppyoloe_crn_s_300e_coco.yml
@@ -43,7 +47,7 @@ weights: output/ppyoloe_fire/best_model
 # ==================== 学习率配置 ====================
 LearningRate:
   # 基础学习率：提高以加速收敛
-  base_lr: 0.01
+  base_lr: 0.0005
   
   schedulers:
     # 余弦退火调度器：学习率按余弦函数衰减
@@ -70,11 +74,11 @@ OptimizerBuilder:
     factor: 0.0005
 
 # ==================== 数据集配置 ====================
-# 训练集配置（使用原始数据 + 在线增强）
+# 训练集配置（使用 battery 增强数据）
 TrainDataset:
   !COCODataSet
-  image_dir: train  # 训练图片目录（324张）
-  anno_path: annotations/instance_train.json  # 原始标注
+  image_dir: train_battery_aug  # 增强后的训练图片目录
+  anno_path: annotations/instance_train_battery_aug.json  # battery 增强标注
   dataset_dir: ../A_train/coco
   data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']  # 数据字段
   allow_empty: true  # 允许空标注
@@ -115,21 +119,21 @@ TrainReader:
     - RandomExpand: {fill_value: [123.675, 116.28, 103.53]}  # 随机扩展
     - RandomCrop: {}                # 随机裁剪
     - RandomFlip: {}                # 随机水平翻转
+    - RandomResize: {               # 多尺度训练
+        target_size: [640, 768, 896],
+        interp: 2,
+        keep_ratio: True
+      }
+    - NormalizeImage: {             # 归一化
+        mean: [0.485, 0.456, 0.406],
+        std: [0.229, 0.224, 0.225],
+        is_scale: True
+      }
+    - Permute: {}                   # 通道顺序转换 (HWC -> CHW)
   
   batch_transforms:  # 批量数据增强
-    - BatchRandomResize: {
-        target_size: [640, 768, 896],  # 根据标注大小设定（平均目标 133-164 像素）
-        random_size: True,      # 随机选择尺寸
-        random_interp: True,    # 随机插值方法
-        keep_ratio: False       # 不保持宽高比
-      }
-    - NormalizeImage: {
-        mean: [0.485, 0.456, 0.406],  # ImageNet 均值
-        std: [0.229, 0.224, 0.225],   # ImageNet 标准差
-        is_scale: True                 # 像素值归一化到 [0, 1]
-      }
-    - Permute: {}       # 通道顺序转换 (HWC -> CHW)
-    - PadGT: {}         # 填充 Ground Truth
+    - PadBatch: {pad_to_stride: 32}  # 填充到 32 的倍数
+    - PadGT: {}  # pad gt 字段，避免不同图片目标数不一致时 collate 失败
   
   batch_size: 4        # 批量大小：增加以提高训练稳定性
   shuffle: true        # 随机打乱数据
@@ -141,16 +145,22 @@ TrainReader:
 EvalReader:
   sample_transforms:
     - Decode: {}                    # 解码图片
-    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}  # 缩放到固定 640x640
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}  # 保持宽高比，padding 填充
     - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
     - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
   batch_size: 1  # 验证时 batch_size 为 1
 
 # 测试数据读取器
 TestReader:
+  inputs_def:
+    image_shape: [3, -1, -1]
   sample_transforms:
     - Decode: {}
-    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}  # 缩放到固定 640x640
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}  # 保持宽高比，padding 填充
     - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
     - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
   batch_size: 1

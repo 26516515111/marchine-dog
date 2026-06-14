@@ -304,8 +304,8 @@ def calculate_f1(pred_data, gt_file):
 
 
 def main():
-    model_dir = "model/"
-    val_txt = "dog/val.txt"
+    model_dir = "model/ppyoloe_fire/"
+    val_txt = "val.txt"
     gt_file = "dog/A_train/coco/annotations/instance_val.json"
     
     # 先用默认阈值验证 F1 计算是否正确

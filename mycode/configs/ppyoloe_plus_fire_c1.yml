@@ -1,0 +1,163 @@
+# PP-YOLOE+-s 火焰检测配置文件 (C1 方案)
+# 相比 A1 (PP-YOLOE-s) 的核心优势：
+#   1. pretrain_weights: Objects365 预训练（365类 1.7M图）>> COCO (80类 115K图)
+#      特征更丰富，小数据集迁移学习效果大幅提升
+#   2. use_alpha: True  —— CSPResNet 新增 alpha 参数，提升特征表达
+#   3. use_large_stem: True —— 更大的 stem 层，保留更多细节特征
+#   4. EMA 内置（use_ema: true ema_decay=0.9998）—— 训练更稳定
+#   5. NormalizeImage: mean=[0,0,0] std=[1,1,1] norm_type=none（与 A1 不同，不做 ImageNet 归一化）
+#
+# 预期 F1: 0.84 ~ 0.87
+# 模型大小: ~30MB（与 PP-YOLOE-s 相同）
+# 参考基线: A1 方案 F1=0.80614
+
+# ==================== 继承基础配置 ====================
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '../ppyoloe/_base_/optimizer_300e.yml',    # 复用300e优化器基础
+  '../ppyoloe/_base_/ppyoloe_plus_crn.yml',  # PP-YOLOE+ 模型结构（含EMA）
+  '../ppyoloe/_base_/ppyoloe_plus_reader.yml', # PP-YOLOE+ 数据读取器
+]
+
+# ==================== 模型配置 ====================
+# Objects365 预训练权重（核心优势）
+# Objects365: 365个类别, 1.7M张图片，特征迁移能力远超COCO
+pretrain_weights: https://bj.bcebos.com/v1/paddledet/models/pretrained/ppyoloe_crn_s_obj365_pretrained.pdparams
+
+# 类别数量：battery=1, board=2, fire=3
+num_classes: 3
+
+# PP-YOLOE-s 缩放因子（与 A1 相同，确保加载预训练权重）
+depth_mult: 0.33
+width_mult: 0.50
+
+# ==================== 训练轮数 ====================
+# Objects365 预训练特征更强，收敛更快，300 epoch 足够
+# （A1 需要 350 epoch 补偿 COCO 预训练的弱特征）
+epoch: 300
+
+log_iter: 20
+snapshot_epoch: 5
+weights: output/ppyoloe_plus_fire_c1/best_model
+
+# ==================== 学习率配置 ====================
+# PP-YOLOE+ 官方用 base_lr=0.001（比 A1 的 0.0005 高一倍）
+# Objects365 预训练 + 更好的 stem/alpha 设计使训练更稳定，可以用更高 lr
+LearningRate:
+  base_lr: 0.001
+  schedulers:
+    - !CosineDecay
+      max_epochs: 300
+    - !LinearWarmup
+      start_factor: 0.0
+      epochs: 10        # 更长 warmup 配合较高 lr
+
+# ==================== 优化器配置 ====================
+OptimizerBuilder:
+  optimizer:
+    type: Momentum
+    momentum: 0.9
+  regularizer:
+    type: L2
+    factor: 0.0005
+
+# ==================== 数据集配置 ====================
+TrainDataset:
+  !COCODataSet
+  image_dir: train
+  anno_path: annotations/instance_train.json
+  dataset_dir: ../A_train/coco
+  data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
+  allow_empty: true
+
+EvalDataset:
+  !COCODataSet
+  image_dir: val
+  anno_path: annotations/instance_val.json
+  dataset_dir: ../A_train/coco
+
+TestDataset:
+  !ImageFolder
+  anno_path: ../A_train/coco/annotations/instance_val.json
+
+metric: COCO
+
+# ==================== 数据读取器配置 ====================
+# PP-YOLOE+ 官方 reader 不含 Mosaic/Mixup，在此手动加入
+# 注意：NormalizeImage 必须用 norm_type=none（PP-YOLOE+ 要求）
+worker_num: 4
+
+TrainReader:
+  sample_transforms:
+    - Decode: {}
+    - Mosaic: {prob: 0.5, enable_mixup: true, mixup_prob: 0.3}
+    - GridMask: {use_h: true, use_w: true, rotate: 1, ratio: 0.6, prob: 0.5}
+    - RandomDistort: {
+        brightness: [0.5, 1.5, 0.5],
+        contrast:   [0.5, 1.5, 0.5],
+        saturation: [0.5, 1.5, 0.5],
+        hue:        [-18, 18, 0.5]
+      }
+    - MotionBlur: {k: [3, 7], angle: [-45, 45], prob: 0.3}
+    - GaussianNoise: {mean: 0, std: [5, 15], prob: 0.2}
+    - RandomExpand: {fill_value: [123.675, 116.28, 103.53]}
+    - RandomCrop: {}
+    - RandomFlip: {}
+  batch_transforms:
+    - BatchRandomResize: {
+        target_size: [640, 768, 896],
+        random_size: True,
+        random_interp: True,
+        keep_ratio: False
+      }
+    # PP-YOLOE+ 使用 norm_type=none（不做 ImageNet 归一化，与 A1 不同！）
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+    - PadGT: {}
+  batch_size: 4
+  shuffle: true
+  drop_last: true
+  use_shared_memory: true
+  close_mosaic: 50    # 最后 50 轮关闭 Mosaic 做精调
+
+EvalReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}
+    # 验证/测试也必须用 norm_type=none
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_size: 1
+
+TestReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_size: 1
+
+# ==================== Head / NMS 配置 ====================
+# 覆盖 ppyoloe_plus_crn.yml 中的默认值
+PPYOLOEHead:
+  fpn_strides: [32, 16, 8]
+  grid_cell_scale: 5.0
+  grid_cell_offset: 0.5
+  static_assigner_epoch: 100
+  use_varifocal_loss: True
+  loss_weight: {class: 1.0, iou: 2.5, dfl: 0.5}
+  static_assigner:
+    name: ATSSAssigner
+    topk: 9
+  assigner:
+    name: TaskAlignedAssigner
+    topk: 13
+    alpha: 1.0
+    beta: 6.0
+  nms:
+    name: MultiClassNMS
+    nms_top_k: 1000
+    keep_top_k: 300
+    score_threshold: 0.05
+    nms_threshold: 0.55

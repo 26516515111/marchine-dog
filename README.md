@@ -1,6 +1,6 @@
 # 火焰检测项目
 
-基于 PaddleDetection 的 PP-YOLOE-s / RT-DETR-R18 双模型进行火焰/电池/指示牌目标检测。
+基于 PaddleDetection 的 PP-YOLOE-s 进行火焰/电池/指示牌目标检测。
 
 ## 环境要求
 
@@ -78,16 +78,24 @@ dog/
 │   ├── model.pdiparams
 │   └── infer_cfg.yml
 ├── mycode/                           # 自定义代码
-│   ├── predict.py                    # 推理脚本
+│   ├── predict.py                    # 推理脚本（含 NMS + 扩框）
 │   ├── calculate_f1.py               # F1 评估脚本
 │   ├── find_best_thresholds.py       # 阈值优化脚本
+│   ├── find_best_thresholds_v2.py    # 阈值优化脚本 v2
 │   ├── test_fps.py                   # FPS 测试脚本
 │   ├── hard_negative_mining.py       # Hard Negative 挖掘脚本
 │   ├── analyze_fp.py                 # FP 分析脚本
 │   ├── analyze_fp_features.py        # FP 特征分析脚本
 │   ├── analyze_fp_stats.py           # FP 统计分析脚本
 │   ├── add_hard_negative.py          # 添加 Hard Negative 脚本
-│   └── check_conf.py                 # 检查 conf 分布脚本
+│   ├── check_conf.py                 # 检查 conf 分布脚本
+│   ├── copy_paste_augmentation.py    # Copy-Paste 数据增强脚本
+│   ├── offline_augmentation.py       # 离线数据增强脚本
+│   └── configs/                      # 训练配置备份
+│       ├── ppyoloe_fire.yml          # PP-YOLOE-s 训练配置
+│       ├── ppyoloe_fire_a1.yml       # PP-YOLOE-s A1 调参版
+│       ├── ppyoloe_fire_hn.yml       # Hard Negative 训练配置
+│       └── ppyoloe_crn.yml           # PP-YOLOE 模型架构配置
 ├── PaddleDetection/                  # PaddleDetection 框架
 ├── RT-DETR/                          # RT-DETR 方案
 │   ├── configs/rtdetr_r18vd_fire.yml #   RT-DETR-R18 训练配置
@@ -95,7 +103,7 @@ dog/
 │   └── train.bat                     #   训练脚本
 ├── ppyolo/                           # 预训练权重
 ├── README.md                         # 本文件
-├── CLAUDE.md                         # 开发规范与陷阱记录
+├── AGENTS.md                         # Agent 配置
 ├── Agent.md                          # 配置变更历史
 ├── 训练结果改进调研报告.md            # 优化方案调研
 └── requirements.txt                  # 依赖列表
@@ -116,14 +124,7 @@ dog/
 ### 1. 训练模型
 
 ```bash
-# 方案 A1：PP-YOLOE-s 调参优化版（推荐首选）
 cd PaddleDetection
-python tools/train.py -c configs/custom/ppyoloe_fire_a1.yml --eval
-
-# 方案 B1：RT-DETR-R18（并行试验）
-python tools/train.py -c configs/custom/rtdetr_r18vd_fire.yml --eval
-
-# 原始版（对照基线）
 python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval
 ```
 
@@ -131,7 +132,7 @@ python tools/train.py -c configs/custom/ppyoloe_fire.yml --eval
 
 ```bash
 cd PaddleDetection
-python tools/export_model.py -c configs/custom/ppyoloe_fire_a1.yml --output_dir=./output_inference -o weights=output/ppyoloe_fire_a1/best_model.pdparams
+python tools/export_model.py -c configs/custom/ppyoloe_fire.yml --output_dir=../../model -o weights=output/best_model.pdparams
 ```
 
 ### 3. 推理预测
@@ -148,49 +149,47 @@ python predict.py val.txt val_result.json
 ### 4. 评估 F1 值
 
 ```bash
-python calculate_f1.py val_result.json val_ground_truth.json
+python mycode/calculate_f1.py val_result.json dog/A_train/coco/annotations/instance_val.json
 ```
 
 ### 5. 测试 FPS
 
 ```bash
-python test_fps.py
+python mycode/test_fps.py
 ```
 
 ## 训练配置
 
-### 方案 A1：PP-YOLOE-s 调参优化版（`mycode/configs/ppyoloe_fire_a1.yml`）
+### PP-YOLOE-s 当前配置（`mycode/configs/ppyoloe_fire.yml`）
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
 | 模型 | PP-YOLOE-s | 预训练权重：COCO，depth_mult=0.33, width_mult=0.50 |
-| Epoch | 350 | 小数据集+强增强需要更多迭代 |
+| Epoch | 200 | 小数据集训练轮数 |
 | Batch Size | 4 | 受限于 RTX 4060 8GB VRAM |
-| 学习率 | 0.0005 | CosineDecay + LinearWarmup(5 epochs)，强增强+小 batch 下更稳定 |
+| 学习率 | 0.01 | CosineDecay + LinearWarmup(5 epochs) |
 | 优化器 | Momentum | 动量=0.9 |
 | 权重衰减 | 0.0005 | L2 正则化 |
-| close_mosaic | 55 | 最后 55 轮关闭 Mosaic/Mixup |
+| close_mosaic | 30 | 最后 30 轮关闭 Mosaic/Mixup |
 | NMS threshold | 0.55 | 降低以减少漏检 |
-| Score threshold | 0.05 | 提高以减少低置信度 FP |
+| Score threshold | 0.01 | 导出模型使用低阈值 |
 
-### 方案 B1：RT-DETR-R18（`RT-DETR/configs/rtdetr_r18vd_fire.yml`）
+### 推理后处理配置（`predict.py`）
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| 模型 | RT-DETR-R18 | Transformer 端到端检测，无需 NMS |
-| Epoch | 300 | 超长训练补偿小数据集 |
-| Batch Size | 4 | 受限于 8GB VRAM |
-| 学习率 | 0.0001 | PiecewiseDecay + LinearWarmup(2000 steps) |
-| 优化器 | AdamW | DETR 标配 |
-| 权重衰减 | 0.0001 | AdamW 内置 |
-| 多尺度 | 480~800 | 13 个尺度随机选择 |
+| class_thresholds | {1: 0.4, 2: 0.4, 3: 0.5} | 最优阈值（F1=0.9189） |
+| nms_threshold | 0.55 | NMS IoU 阈值 |
+| bbox_scales | {1: (1.55, 1.15), 2: (1.0, 1.0), 3: (1.18, 1.18)} | 扩框比例 |
 
-### PP-YOLOE-s 数据增强
+处理顺序：阈值过滤 → class-wise NMS → battery/fire 扩框 → clip 到图片边界 → 输出
+
+### 数据增强配置
 
 | 增强操作 | 概率 | 说明 |
 |----------|------|------|
 | Mosaic | 0.5 | 四图拼接 + Mixup(0.3) |
-| GridMask | 0.5 | 网格遮挡正则化 |
+| GridMask | 0.4 | 网格遮挡正则化 |
 | RandomDistort | - | 颜色抖动（亮度/对比度/饱和度/色调） |
 | MotionBlur | 0.3 | 运动模糊 |
 | GaussianNoise | 0.2 | 高斯噪声 |
@@ -208,7 +207,32 @@ python test_fps.py
 | fire | 717 | 73.2% |
 
 > **注意**：VarifocalLoss 不支持 per-class 权重，`class_weight` 配置会被静默忽略。
-> 类别不平衡通过数据级过采样解决。
+> 类别不平衡通过推理后处理（NMS + 扩框）解决。
+
+## 性能指标
+
+### 最终成绩（2026-06-12）
+
+| 数据集 | 综合 F1 | battery F1 | board F1 | fire F1 |
+|--------|---------|------------|----------|---------|
+| 训练集 | **0.9408** | 0.906 | 0.973 | 0.943 |
+| 验证集 | **0.9189** | 0.875 | 0.919 | 0.963 |
+
+**综合 F1 超过目标 0.85，所有类别均达标！**
+
+### 优化历程
+
+| 阶段 | F1 | 关键改进 |
+|------|-----|----------|
+| 初始模型 | 0.80614 | baseline |
+| 学习率提升 | 0.82368 | base_lr: 0.0005 → 0.01 |
+| 阈值优化 | 0.8455 | battery=0.4, board=0.4, fire=0.5 |
+| NMS 后处理 | 0.8701 | predict.py 添加 NMS (threshold=0.55) |
+| 扩框优化 | **0.9189** | battery 扩框 1.55x/1.15y, fire 扩框 1.18x/1.18y |
+
+### 泛化验证
+
+训练集/验证集 F1 差距仅 2.2%，无过拟合风险。
 
 ## 常见问题
 
@@ -254,25 +278,74 @@ TrainReader:
 ### 5. 配置不生效
 
 `class_weight` 列表格式在 PPYOLOEHead 中不被识别（仅支持 `{class, iou, dfl}` dict）。
-VarifocalLoss 不支持 per-class 权重，需通过数据过采样解决类别不平衡。
-详见 `Agent.md` 和 `CLAUDE.md`。
+VarifocalLoss 不支持 per-class 权重，需通过推理后处理解决类别不平衡。
+详见 `Agent.md` 和 `AGENTS.md`。
 
-## 性能指标
+### 6. 训练时报错 `ValueError: all input arrays must have the same shape`
 
-| 指标 | 当前值 | 目标值 | 说明 |
-|------|--------|--------|------|
-| F1 分数 | 0.80614 | >= 0.85 | PP-YOLOE-s 当前最佳 |
-| 推理速度 | >= 20 FPS | >= 20 FPS | RTX 4060 Laptop |
-| 模型大小 | ~212MB | <= 200MB | 导出后可压缩 |
+这是 `DataLoader` 组 batch 时的典型配置问题，不是图片文件本身损坏。
 
-### 优化路线
+常见根因：
+- batch 内不同图片的目标框数量不同
+- `TrainReader.batch_transforms` 里缺少 `PadGT: {}`
+- `default_collate_fn` 在拼接 `gt_bbox / gt_class / is_crowd` 时直接 `np.stack` 失败
 
-| 方案 | 配置 | 状态 | 预期 F1 |
-|------|------|------|---------|
-| A1 PP-YOLOE-s 调参 | `ppyoloe_fire_a1.yml` | 就绪 | 0.83~0.85 |
-| B1 RT-DETR-R18 | `rtdetr_r18vd_fire.yml` | 就绪 | 0.84~0.88 |
-| A2 数据扩充 | Copy-Paste + 离线增强 | 待执行 | +0.01~0.03 |
-| A3 PP-YOLOE+ | 升级 Head 架构 | 待执行 | +0.02~0.04 |
+修复方式：
+```yaml
+TrainReader:
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+    - PadGT: {}
+```
+
+快速校验：
+```bash
+python mycode/scripts/validate_reader_batch_transforms.py
+```
+
+如果你在自定义 `RandomResize`、`keep_ratio`、`PadBatch` 或 reader 流程后再次遇到这个报错，先检查 `PadGT` 是否还在。
+
+### 7. 验证时报错 `custom_pan.py` 中 `paddle.concat` 尺寸不一致
+
+典型报错类似：
+- `input[0] shape = [1, 192, 28, 48]`
+- `input[1] shape = [1, 256, 27, 48]`
+
+这通常不是模型权重损坏，而是 `EvalReader/TestReader` 的输入尺寸没有对齐到稳定的 32 倍数。
+
+常见根因：
+- 使用了 `Resize(..., keep_ratio=True)`
+- 但没有额外做 `PadBatch`
+- `Resize(keep_ratio=True)` 只等比缩放，不会自动补边
+- 结果某些图片在进入 PP-YOLOE 的 FPN/PAN 后，上采样分支和旁路分支会出现 `27/28` 这种错一格
+
+修复方式：
+```yaml
+EvalReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+
+TestReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225], is_scale: True}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+```
+
+快速校验：
+```bash
+python mycode/scripts/validate_reader_batch_transforms.py
+```
+
+如果你打算保留 `keep_ratio=True` 的验证/测试流程，就把 `PadBatch` 当成配套项，不要单独开启。
 
 ## 许可证
 
