@@ -32,6 +32,10 @@ num_classes: 3
 depth_mult: 0.33
 width_mult: 0.50
 
+# Eval/Test use keep_ratio=True + PadBatch, so input shapes are dynamic.
+# Disable the fixed eval_size inherited from ppyoloe_plus_reader.yml.
+eval_size: ~
+
 # ==================== 训练轮数 ====================
 # Objects365 预训练特征更强，收敛更快，300 epoch 足够
 # （A1 需要 350 epoch 补偿 COCO 预训练的弱特征）
@@ -39,6 +43,7 @@ epoch: 300
 
 log_iter: 20
 snapshot_epoch: 5
+save_dir: output/ppyoloe_plus_fire_c1
 weights: output/ppyoloe_plus_fire_c1/best_model
 
 # ==================== 学习率配置 ====================
@@ -109,11 +114,12 @@ TrainReader:
         target_size: [640, 768, 896],
         random_size: True,
         random_interp: True,
-        keep_ratio: False
+        keep_ratio: True
       }
     # PP-YOLOE+ 使用 norm_type=none（不做 ImageNet 归一化，与 A1 不同！）
     - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
     - Permute: {}
+    - PadBatch: {pad_to_stride: 32}
     - PadGT: {}
   batch_size: 4
   shuffle: true
@@ -124,18 +130,24 @@ TrainReader:
 EvalReader:
   sample_transforms:
     - Decode: {}
-    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}
     # 验证/测试也必须用 norm_type=none
     - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
     - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
   batch_size: 1
 
 TestReader:
+  inputs_def:
+    image_shape: [3, -1, -1]
   sample_transforms:
     - Decode: {}
-    - Resize: {target_size: [640, 640], keep_ratio: False, interp: 2}
+    - Resize: {target_size: [768, 768], keep_ratio: True, interp: 2}
     - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
     - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
   batch_size: 1
 
 # ==================== Head / NMS 配置 ====================
