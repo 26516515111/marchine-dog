@@ -1,0 +1,53 @@
+{
+  "version": "5.1.0",
+  "flags": {},
+  "shapes": [
+    {
+      "score": null,
+      "description": "",
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          43.65019011406834,
+          498.0988593155894
+        ],
+        [
+          102.39283204078674,
+          596.3205675780773
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    },
+    {
+      "score": null,
+      "description": "",
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "battery",
+      "points": [
+        [
+          303.8073402643204,
+          499.526821821928
+        ],
+        [
+          354.946226477623,
+          584.7783167660236
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    }
+  ],
+  "imagePath": "frame_01671.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "checked": false
+}

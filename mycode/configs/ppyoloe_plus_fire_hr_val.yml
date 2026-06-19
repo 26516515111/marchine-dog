@@ -1,0 +1,146 @@
+# PP-YOLOE+-s 高分辨率全量训练配置 (High Resolution: max 1024)
+# 基于 ppyoloe_plus_fire_c1_light.yml 修改，使用 Objects365 预训练
+#
+# 关键变化：
+#   1. 训练轮数 (epoch) 改为 200
+#   2. 数据集使用训练/验证划分 (instance_train.json + instance_val.json)
+#   3. TrainReader 多尺度分辨率提升至: [832, 896, 960, 1024]
+#   4. Eval/Test 分辨率固定为: 1024
+#   5. batch_size 从 4 降至 2 (防止高分辨率下显存溢出 OOM)
+
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '../ppyoloe/_base_/optimizer_300e.yml',
+  '../ppyoloe/_base_/ppyoloe_plus_crn.yml',
+  '../ppyoloe/_base_/ppyoloe_plus_reader.yml',
+]
+
+pretrain_weights: https://bj.bcebos.com/v1/paddledet/models/pretrained/ppyoloe_crn_s_obj365_pretrained.pdparams
+num_classes: 3
+depth_mult: 0.33
+width_mult: 0.50
+eval_size: ~
+
+# 【修改处】轮数定为 150（降低过拟合风险）
+epoch: 150
+log_iter: 20
+snapshot_epoch: 5
+save_dir: output/ppyoloe_plus_fire_hr_val
+weights: output/ppyoloe_plus_fire_hr_val/best_model
+
+LearningRate:
+  base_lr: 0.001
+  schedulers:
+    - !CosineDecay
+      max_epochs: 150  # 同步修改
+    - !LinearWarmup
+      start_factor: 0.0
+      epochs: 10
+
+OptimizerBuilder:
+  optimizer:
+    type: Momentum
+    momentum: 0.9
+  regularizer:
+    type: L2
+    factor: 0.0005
+
+# ==================== 数据集配置 ====================
+TrainDataset:
+  !COCODataSet
+  image_dir: train
+  anno_path: annotations/instance_train.json
+  dataset_dir: ../A_train/coco_dataset
+  data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
+  allow_empty: true
+
+EvalDataset:
+  !COCODataSet
+  image_dir: val
+  anno_path: annotations/instance_val.json
+  dataset_dir: ../A_train/coco_dataset
+
+TestDataset:
+  !ImageFolder
+  anno_path: ../A_train/coco_dataset/annotations/instance_val.json
+
+metric: COCO
+
+# ==================== 数据读取器配置 ====================
+worker_num: 8
+
+TrainReader:
+  sample_transforms:
+    - Decode: {}
+    - Mosaic: {prob: 0.5, enable_mixup: true, mixup_prob: 0.3}
+    - RandomDistort: {
+        brightness: [0.5, 1.5, 0.5],
+        contrast:   [0.5, 1.5, 0.5],
+        saturation: [0.5, 1.5, 0.5],
+        hue:        [-18, 18, 0.5]
+      }
+    - RandomExpand: {fill_value: [123.675, 116.28, 103.53]}
+    - RandomCrop: {}
+    - RandomFlip: {}
+  batch_transforms:
+    - BatchRandomResize: {
+        target_size: [832],  # 【修改处】固定训练分辨率上限为 832
+        random_size: True,
+        random_interp: True,
+        keep_ratio: True
+      }
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+    - PadBatch: {pad_to_stride: 32}
+    - PadGT: {}
+  batch_size: 4  # 【修改处】由于最大分辨率降至 832，尝试将 batch_size 恢复为 4 加快训练
+  shuffle: true
+  drop_last: true
+  use_shared_memory: true
+  close_mosaic: 30  # 【修改处】总轮数降至150后，按比例将关闭马赛克的轮数下调为最后30轮
+
+EvalReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [832, 832], keep_ratio: True, interp: 2}  # 【修改处】验证对应改为 832
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+  batch_size: 1
+
+TestReader:
+  inputs_def:
+    image_shape: [3, -1, -1]
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [832, 832], keep_ratio: True, interp: 2}  # 【修改处】测试对应改为 832
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+  batch_size: 1
+
+# ==================== Head / NMS 配置 ====================
+PPYOLOEHead:
+  fpn_strides: [32, 16, 8]
+  grid_cell_scale: 5.0
+  grid_cell_offset: 0.5
+  static_assigner_epoch: 50  # 【修改处】总轮数降至150后，预热期按比例下调为前50轮
+  use_varifocal_loss: True
+  loss_weight: {class: 1.0, iou: 2.5, dfl: 0.5}
+  static_assigner:
+    name: ATSSAssigner
+    topk: 9
+  assigner:
+    name: TaskAlignedAssigner
+    topk: 13
+    alpha: 1.0
+    beta: 6.0
+  nms:
+    name: MultiClassNMS
+    nms_top_k: 1000
+    keep_top_k: 300
+    score_threshold: 0.05
+    nms_threshold: 0.55

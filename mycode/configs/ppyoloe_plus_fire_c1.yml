@@ -72,7 +72,7 @@ TrainDataset:
   !COCODataSet
   image_dir: train
   anno_path: annotations/instance_train.json
-  dataset_dir: ../A_train/coco
+  dataset_dir: ../A_train/coco_dataset
   data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
   allow_empty: true
 
@@ -80,11 +80,11 @@ EvalDataset:
   !COCODataSet
   image_dir: val
   anno_path: annotations/instance_val.json
-  dataset_dir: ../A_train/coco
+  dataset_dir: ../A_train/coco_dataset
 
 TestDataset:
   !ImageFolder
-  anno_path: ../A_train/coco/annotations/instance_val.json
+  anno_path: ../A_train/coco_dataset/annotations/instance_val.json
 
 metric: COCO
 

@@ -1,0 +1,74 @@
+{
+  "version": "5.1.0",
+  "flags": {},
+  "shapes": [
+    {
+      "score": null,
+      "description": "",
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "battery",
+      "points": [
+        [
+          1005.2515867352486,
+          515.4419718682766
+        ],
+        [
+          1029.945556819439,
+          563.9630283415318
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    },
+    {
+      "score": null,
+      "description": "",
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "fire",
+      "points": [
+        [
+          1676.5323024988174,
+          506.25288873910904
+        ],
+        [
+          1707.8715366125107,
+          566.2944540381432
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    },
+    {
+      "score": null,
+      "description": "",
+      "difficult": false,
+      "attributes": {},
+      "kie_linking": [],
+      "label": "battery",
+      "points": [
+        [
+          1716.3340294361115,
+          462.5733831524849
+        ],
+        [
+          1814.7455298900604,
+          631.2083646655083
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    }
+  ],
+  "imagePath": "frame_00768.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "checked": false
+}
