@@ -111,7 +111,7 @@ class FirePredictRawTests(unittest.TestCase):
         self.assertEqual(parsed.preprocess_infos, config["Preprocess"])
         self.assertEqual(parsed.id_to_category, {0: "firebig"})
 
-    def test_format_firebig_result_preserves_score(self):
+    def test_format_firebig_result_has_exact_submission_fields(self):
         predict = load_predict()
 
         result = predict.format_firebig_result(
@@ -129,8 +129,33 @@ class FirePredictRawTests(unittest.TestCase):
                 "width": 30.0,
                 "height": 40.0,
                 "segmentation": [],
-                "score": 0.75,
             },
+        )
+
+    def test_format_submission_excludes_diagnostic_top_level_fields(self):
+        predict = load_predict()
+        internal_predictions = {
+            "result": [
+                {
+                    "image_id": "sample_001",
+                    "type": 1,
+                    "x": 1.5,
+                    "y": 2.5,
+                    "width": 30.0,
+                    "height": 40.0,
+                    "segmentation": [],
+                }
+            ],
+            "raw_candidates": {"sample_001": [{"score": 0.75}]},
+            "unreadable_images": [],
+        }
+
+        submission = predict.format_submission(internal_predictions)
+
+        self.assertEqual(list(submission), ["result"])
+        self.assertEqual(
+            set(submission["result"][0]),
+            {"image_id", "type", "x", "y", "width", "height", "segmentation"},
         )
 
     def test_xyxy_conversion_clips_and_rejects_degenerate_box(self):
