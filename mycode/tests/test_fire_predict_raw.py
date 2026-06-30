@@ -1,9 +1,14 @@
+import ast
 import importlib.util
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+import numpy as np
 
 
 WORKSPACE_ROOT = Path(r"D:\work\Marchine_Dog")
@@ -21,6 +26,114 @@ def load_predict():
 
 
 class FirePredictRawTests(unittest.TestCase):
+    def test_configure_gpu_rejects_cpu_paddle(self):
+        predict = load_predict()
+
+        class FakeCuda:
+            @staticmethod
+            def device_count():
+                return 0
+
+        class FakePaddle:
+            device = type("Device", (), {"cuda": FakeCuda})
+
+            @staticmethod
+            def is_compiled_with_cuda():
+                return False
+
+        with self.assertRaisesRegex(RuntimeError, "CUDA"):
+            predict.configure_gpu(object(), FakePaddle)
+
+    def test_configure_gpu_rejects_small_memory_pool(self):
+        predict = load_predict()
+
+        class FakeCuda:
+            @staticmethod
+            def device_count():
+                return 1
+
+        class FakePaddle:
+            device = type("Device", (), {"cuda": FakeCuda})
+
+            @staticmethod
+            def is_compiled_with_cuda():
+                return True
+
+        class FakeConfig:
+            def enable_use_gpu(self, pool_mb, device_id):
+                raise AssertionError("must reject before enabling GPU")
+
+        with patch.dict(os.environ, {"PREDICT_GPU_POOL_MB": "999"}):
+            with self.assertRaisesRegex(ValueError, "at least 1000"):
+                predict.configure_gpu(FakeConfig(), FakePaddle)
+
+    def test_configure_gpu_enables_device_zero(self):
+        predict = load_predict()
+
+        class FakeCuda:
+            @staticmethod
+            def device_count():
+                return 1
+
+        class FakePaddle:
+            device = type("Device", (), {"cuda": FakeCuda})
+
+            @staticmethod
+            def is_compiled_with_cuda():
+                return True
+
+        class FakeConfig:
+            enabled = None
+
+            def enable_use_gpu(self, pool_mb, device_id):
+                self.enabled = (pool_mb, device_id)
+
+        config = FakeConfig()
+        with patch.dict(os.environ, {"PREDICT_GPU_POOL_MB": "2000"}):
+            predict.configure_gpu(config, FakePaddle)
+
+        self.assertEqual(config.enabled, (2000, 0))
+
+    def test_paddle_imports_are_at_module_scope(self):
+        tree = ast.parse(PREDICT_PATH.read_text(encoding="utf-8"))
+        module_imports = [
+            node
+            for node in tree.body
+            if isinstance(node, (ast.Import, ast.ImportFrom))
+        ]
+        self.assertTrue(
+            any(
+                isinstance(node, ast.Import)
+                and any(alias.name == "paddle" for alias in node.names)
+                for node in module_imports
+            )
+        )
+        for function in [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]:
+            nested_imports = [
+                node
+                for node in ast.walk(function)
+                if isinstance(node, (ast.Import, ast.ImportFrom))
+            ]
+            self.assertFalse(
+                any(
+                    (
+                        isinstance(node, ast.Import)
+                        and any(alias.name == "paddle" for alias in node.names)
+                    )
+                    or (
+                        isinstance(node, ast.ImportFrom)
+                        and node.module
+                        and node.module.startswith("paddle")
+                    )
+                    for node in nested_imports
+                ),
+                f"Paddle import found inside {function.name}",
+            )
+
     def test_relative_gate_rejects_low_confidence_large_box(self):
         predict = load_predict()
         detections = [
@@ -157,6 +270,58 @@ class FirePredictRawTests(unittest.TestCase):
             set(submission["result"][0]),
             {"image_id", "type", "x", "y", "width", "height", "segmentation"},
         )
+
+    def test_predict_images_returns_only_final_result(self):
+        predict = load_predict()
+
+        class FakeDetector:
+            preprocess_ops = []
+            pred_config = type("Config", (), {"id_to_category": {0: "firebig"}})()
+
+            @staticmethod
+            def predict(_inputs):
+                return {
+                    "boxes": np.asarray(
+                        [[0.0, 0.9, 10.0, 20.0, 40.0, 60.0]],
+                        dtype=np.float32,
+                    ),
+                    "boxes_num": np.asarray([1], dtype=np.int32),
+                }
+
+        image = np.zeros((3, 64, 64), dtype=np.float32)
+        info = {
+            "origin_shape": np.asarray([100, 100], dtype=np.float32),
+            "im_shape": np.asarray([64, 64], dtype=np.float32),
+            "scale_factor": np.asarray([0.64, 0.64], dtype=np.float32),
+        }
+        with (
+            patch.object(predict, "preprocess", return_value=(image, info)),
+            patch.object(predict, "create_inputs", return_value={}),
+        ):
+            result = predict.predict_images(FakeDetector(), ["sample_001.jpg"])
+
+        self.assertEqual(list(result), ["result"])
+        self.assertEqual(len(result["result"]), 1)
+
+    def test_write_submission_uses_compact_json(self):
+        predict = load_predict()
+        item = {
+            "image_id": "sample_001",
+            "type": 1,
+            "x": 1.5,
+            "y": 2.5,
+            "width": 30.0,
+            "height": 40.0,
+            "segmentation": [],
+        }
+        with TemporaryDirectory() as tmp:
+            output = Path(tmp) / "result.json"
+
+            predict.write_submission(output, {"result": [item]})
+
+            text = output.read_text(encoding="utf-8")
+        self.assertNotIn("\n", text)
+        self.assertEqual(json.loads(text), {"result": [item]})
 
     def test_xyxy_conversion_clips_and_rejects_degenerate_box(self):
         predict = load_predict()
