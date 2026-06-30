@@ -6,6 +6,7 @@ __pycache__/
 # Agent
 .workbuddy/
 .claude/
+.worktrees/
 
 # C extensions
 *.so
