@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PREDICT_PATH = PROJECT_ROOT / "firebig" / "predict.py"
@@ -111,6 +113,38 @@ class FirebigPredictGpuTests(unittest.TestCase):
                 ),
                 f"Paddle import found inside {function.name}",
             )
+
+    def test_predict_images_omits_boxes_below_output_threshold(self):
+        predict = load_predict()
+
+        class FakeDetector:
+            preprocess_ops = []
+            pred_config = type("Config", (), {"id_to_category": {0: "firebig"}})()
+
+            @staticmethod
+            def predict(_inputs):
+                return {
+                    "boxes": np.asarray(
+                        [[0.0, 0.4, 10.0, 20.0, 40.0, 60.0]],
+                        dtype=np.float32,
+                    ),
+                    "boxes_num": np.asarray([1], dtype=np.int32),
+                }
+
+        image = np.zeros((3, 64, 64), dtype=np.float32)
+        info = {
+            "origin_shape": np.asarray([100, 100], dtype=np.float32),
+            "im_shape": np.asarray([64, 64], dtype=np.float32),
+            "scale_factor": np.asarray([0.64, 0.64], dtype=np.float32),
+        }
+        with (
+            patch.object(predict, "preprocess", return_value=(image, info)),
+            patch.object(predict, "create_inputs", return_value={}),
+        ):
+            result = predict.predict_images(FakeDetector(), ["sample_001.jpg"])
+
+        self.assertEqual(predict.MIN_OUTPUT_SCORE, 0.5)
+        self.assertEqual(result, {"result": []})
 
 
 if __name__ == "__main__":
