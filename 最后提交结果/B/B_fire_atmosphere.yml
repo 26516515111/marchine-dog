@@ -1,0 +1,153 @@
+# B_fire_atmosphere: fire single-class training with conservative atmosphere robustness.
+# Run from dog/PaddleDetection:
+#   python tools/train.py -c ../../fire/B_fire_atmosphere.yml --eval
+#
+# Paper basis for this conservative atmosphere augmentation:
+# - Domain Randomization: synthetic-to-real/domain-gap robustness through controlled variation.
+# - ImageNet-C / common corruptions: brightness, contrast, blur, noise and fog-like degradation
+#   are representative deployment corruptions.
+# - AugMix / RandAugment: bounded photometric transforms can improve distribution-shift robustness.
+# - Random Erasing: weak local occlusion robustness; kept very low because fire boxes must remain reliable.
+
+_BASE_: [
+  '../datasets/coco_detection.yml',
+  '../runtime.yml',
+  '../ppyoloe/_base_/optimizer_300e.yml',
+  '../ppyoloe/_base_/ppyoloe_plus_crn.yml',
+  '../ppyoloe/_base_/ppyoloe_plus_reader.yml',
+]
+
+pretrain_weights: https://bj.bcebos.com/v1/paddledet/models/pretrained/ppyoloe_crn_m_obj365_pretrained.pdparams
+num_classes: 1
+depth_mult: 0.67
+width_mult: 0.75
+eval_size: ~
+
+epoch: 100
+log_iter: 10
+snapshot_epoch: 5
+save_dir: output/B_fire_atmosphere
+weights: output/B_fire_atmosphere/best_model
+
+LearningRate:
+  base_lr: 0.0005
+  schedulers:
+    - !CosineDecay
+      max_epochs: 100
+    - !LinearWarmup
+      start_factor: 0.1
+      epochs: 5
+
+OptimizerBuilder:
+  optimizer:
+    type: Momentum
+    momentum: 0.9
+  regularizer:
+    type: L2
+    factor: 0.0005
+
+TrainDataset:
+  !COCODataSet
+  image_dir: images
+  anno_path: annotations/instance_train_21.json
+  dataset_dir: ../A_train/merged_fire_coco
+  data_fields: ['image', 'gt_bbox', 'gt_class', 'is_crowd']
+  allow_empty: true
+
+EvalDataset:
+  !COCODataSet
+  image_dir: images
+  anno_path: annotations/instance_val_21.json
+  dataset_dir: ../A_train/merged_fire_coco
+
+TestDataset:
+  !ImageFolder
+  anno_path: ../A_train/merged_fire_coco/annotations/instance_val_21.json
+
+metric: COCO
+worker_num: 8
+
+TrainReader:
+  sample_transforms:
+    - Decode: {}
+    # Stronger but bounded color/light variation for glow, overexposure and smoke tint.
+    - RandomDistort: {
+        brightness: [0.78, 1.32, 0.55],
+        contrast:   [0.78, 1.28, 0.45],
+        saturation: [0.75, 1.35, 0.45],
+        hue:        [-8, 8, 0.20],
+        random_apply: true,
+        count: 4
+      }
+    # Simulate slight defocus, haze, and camera motion. Keep probabilities low.
+    - GaussianBlur: {k: [3, 5], sigma: [0.2, 1.2], prob: 0.08}
+    - MotionBlur: {k: [3, 5], angle: [-20, 20], prob: 0.08}
+    - GaussianNoise: {mean: 0, std: [2, 8], prob: 0.08}
+    # Very weak bright occlusion to imitate local flare/bloom without destroying labels.
+    - RandomErasing: {
+        prob: 0.04,
+        scale: [0.005, 0.035],
+        ratio: [0.5, 2.0],
+        value: [245, 235, 190]
+      }
+    - RandomExpand: {ratio: 1.12, prob: 0.75, fill_value: [123.675, 116.28, 103.53]}
+    - RandomFlip: {}
+  batch_transforms:
+    - BatchRandomResize: {
+        target_size: [704, 768, 832, 896],
+        random_size: True,
+        random_interp: True,
+        keep_ratio: True
+      }
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+    - PadBatch: {pad_to_stride: 32}
+    - PadGT: {}
+  batch_size: 4
+  shuffle: true
+  drop_last: true
+  use_shared_memory: false
+
+EvalReader:
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [832, 832], keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+  batch_size: 4
+
+TestReader:
+  inputs_def:
+    image_shape: [3, -1, -1]
+  sample_transforms:
+    - Decode: {}
+    - Resize: {target_size: [832, 832], keep_ratio: True, interp: 2}
+    - NormalizeImage: {mean: [0., 0., 0.], std: [1., 1., 1.], norm_type: none}
+    - Permute: {}
+  batch_transforms:
+    - PadBatch: {pad_to_stride: 32}
+  batch_size: 4
+
+PPYOLOEHead:
+  fpn_strides: [32, 16, 8]
+  grid_cell_scale: 5.0
+  grid_cell_offset: 0.5
+  static_assigner_epoch: 40
+  use_varifocal_loss: True
+  loss_weight: {class: 1.0, iou: 2.5, dfl: 0.5}
+  static_assigner:
+    name: ATSSAssigner
+    topk: 9
+  assigner:
+    name: TaskAlignedAssigner
+    topk: 13
+    alpha: 1.0
+    beta: 6.0
+  nms:
+    name: MultiClassNMS
+    nms_top_k: 1000
+    keep_top_k: 300
+    score_threshold: 0.02
+    nms_threshold: 0.65

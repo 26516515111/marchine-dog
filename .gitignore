@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+﻿# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,7 +13,7 @@ __pycache__/
 CLAUDE.md
 plan.md
 Agent.md
-训练结果改进调研报告.md
+璁粌缁撴灉鏀硅繘璋冪爺鎶ュ憡.md
 
 # Distribution / packaging
 .Python
@@ -83,21 +83,48 @@ Thumbs.db
 PaddleDetection/output/
 PaddleDetection/vdl_log/
 PaddleDetection/inference_model/
+PaddleDetection/dataset/
+PaddleDetection/log/
 
-# Model files (large files)
+# Model files (keep structure files, ignore large weights)
 *.pdparams
-*.pdmodel
 *.pdiparams
+*.pdiparams.info
 *.pdopt
 *.paddle
+*.onnx
+*.engine
 
 # Training outputs
 mycode/output/
 output/
 vdl_log/
+log/
 
-# Data (keep only scripts)
+# Local datasets (keep root scripts and tests)
+A_train/*
+!A_train/*.py
+!A_train/*.md
+!A_train/tests/
+!A_train/tests/**
+A_train/**/__pycache__/
 mycode/data/annotations_*.json
+
+# Dataset and submission archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# Generated predictions / metrics
+pred_*.json
+*_pred*.json
+result*.json
+mycode/*.jpg
+mycode/*.jpeg
+mycode/*.png
 
 # Temporary files
 *.tmp
