@@ -38,9 +38,7 @@ dog/
 ├── mycode/                           # 自定义代码
 │   ├── evaluate_fire_predictions.py  # F1 评估（核心）
 │   ├── firedetect_public.py          # 评测工具函数库
-│   └── analysis/
-│       ├── scheme_D_combined.py      # 方案 D 去雾算法
-│       └── smoke_results/            # 烟雾方案对比图
+│   └── threshold_analysis/           # 阈值分析曲线图
 ├── 最后提交结果/
 │   ├── A/                            # A 榜：PP-YOLOE+ full_hr
 │   └── B/                            # B 榜：PP-YOLOE+ CRN M + atmosphere
