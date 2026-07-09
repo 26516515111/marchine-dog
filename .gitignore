@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -89,7 +89,6 @@ PaddleDetection/log/
 # Model files (keep structure files, ignore large weights)
 *.pdparams
 *.pdiparams
-*.pdiparams.info
 *.pdopt
 *.paddle
 *.onnx
